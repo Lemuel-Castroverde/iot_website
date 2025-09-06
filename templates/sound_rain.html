@@ -1,0 +1,22 @@
+ {% extends "base.html" %}
+{% block content %}
+<h2>Sound & Rain</h2>
+<div class="card p-3 shadow">
+  <h4>Sound Level: <span id="sound">--</span> dB</h4>
+  <h4>Rain: <span id="rain">--</span></h4>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
+
+<script>
+function fetchData() {
+  fetch("/get_sound_rain")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("sound").textContent = data.sound;
+      document.getElementById("rain").textContent = data.rain;
+    });
+}
+setInterval(fetchData, 2000);
+</script>
+{% endblock %}

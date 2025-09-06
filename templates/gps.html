@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>GPS Location</h2>
+<div class="card p-3 shadow">
+  <h4>Latitude: <span id="lat">--</span></h4>
+  <h4>Longitude: <span id="lng">--</span></h4>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
+
+<script>
+function fetchData() {
+  fetch("/get_gps")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("lat").textContent = data.lat;
+      document.getElementById("lng").textContent = data.lng;
+    });
+}
+setInterval(fetchData, 3000);
+</script>
+{% endblock %}

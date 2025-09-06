@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Motion Detection + Camera</h2>
+<div class="card p-3 shadow">
+  <h4>Status: <span id="motion">--</span></h4>
+  <img id="camera_feed" src="https://via.placeholder.com/400" class="img-fluid mt-2"/>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
+
+<script>
+function fetchData() {
+  fetch("/get_distance") // replace with your motion API later
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("motion").textContent = data.distance > 50 ? "No Motion" : "Motion Detected";
+    });
+}
+setInterval(fetchData, 2000);
+</script>
+{% endblock %}

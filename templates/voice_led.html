@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Voice Activated LEDs</h2>
+<div class="card p-3 shadow">
+  <button class="btn btn-primary">🎤 Start Listening</button>
+  <h4>Status: <span id="led_status">--</span></h4>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
+
+<script>
+// Placeholder: replace with speech recognition logic later
+document.querySelector("button").addEventListener("click", () => {
+  document.getElementById("led_status").textContent = "Listening for command...";
+});
+</script>
+{% endblock %}

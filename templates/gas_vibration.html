@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Gas & Vibration</h2>
+<div class="card p-3 shadow">
+  <h4>Gas: <span id="gas">--</span></h4>
+  <h4>Vibration: <span id="vib">--</span></h4>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
+
+<script>
+function fetchData() {
+  fetch("/get_gas_vibration")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("gas").textContent = data.gas;
+      document.getElementById("vib").textContent = data.vibration ? "Detected" : "None";
+    });
+}
+setInterval(fetchData, 2000);
+</script>
+{% endblock %}

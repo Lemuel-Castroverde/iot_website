@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Text to Speech</h2>
+<div class="card p-3 shadow">
+  <input type="text" id="tts_text" class="form-control mb-2" placeholder="Enter text to speak">
+  <button class="btn btn-success" onclick="speak()">Speak</button>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
+
+<script>
+function speak() {
+  let msg = new SpeechSynthesisUtterance(document.getElementById("tts_text").value);
+  window.speechSynthesis.speak(msg);
+}
+</script>
+{% endblock %}

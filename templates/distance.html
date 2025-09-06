@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Distance Sensor</h2>
+<div class="card p-3 shadow">
+  <h4>Distance: <span id="dist">--</span> cm</h4>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
+
+<script>
+function fetchData() {
+  fetch("/get_distance")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("dist").textContent = data.distance;
+    });
+}
+setInterval(fetchData, 2000);
+</script>
+{% endblock %}

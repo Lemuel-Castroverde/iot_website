@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Humidity & Temperature</h2>
+<div class="card p-3 shadow">
+  <h4>Temperature: <span id="temp">--</span> °C</h4>
+  <h4>Humidity: <span id="hum">--</span> %</h4>
+</div>
+
+<a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
+
+<script>
+function fetchData() {
+  fetch("/get_temp_humidity")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("temp").textContent = data.temperature;
+      document.getElementById("hum").textContent = data.humidity;
+    });
+}
+setInterval(fetchData, 2000);
+</script>
+{% endblock %}

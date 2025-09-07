@@ -17,14 +17,9 @@ def home():
 def temp_humidity():
     return render_template("temp_humidity.html")
 
-@app.route('/get_distance')
-def get_distance():
-    distance = round(random.uniform(5, 100), 2)
-    buzzer = "ON" if distance <= 12 else "OFF"
-    return jsonify({
-        "distance": distance,
-        "buzzer": buzzer
-    })
+@app.route('/distance')
+def distance():
+    return render_template("distance.html")
 
 @app.route('/motion_camera')
 def motion_camera():
@@ -116,21 +111,38 @@ if __name__ == "__main__":
 # =====================================================
 # ACTIVITY 2: Distance Sensor
 # =====================================================
-# distance_data = {"distance": "--", "buzzer": "OFF"}
+# distance_data = {"distance": "--"}
 #
 # @app.route("/upload_distance", methods=["POST"])
 # def upload_distance():
 #     global distance_data
 #     data = request.get_json()
-#     try:
-#         distance = float(data.get("distance", 999))
-#     except (ValueError, TypeError):
-#         distance = 999
+#     distance_data["distance"] = data["distance"]
+#     return jsonify({"status": "success"})
 #
-#     buzzer = "ON" if distance <= 12 else "OFF"
+# @app.route("/get_distance")
+# def get_distance():
+#     return jsonify(distance_data)
+
+# =====================================================
+# ACTIVITY 2: Distance Sensor + Buzzer
+# =====================================================
+# distance_data = {"sensor1": "--", "sensor2": "--", "buzzer": "OFF"}
 #
-#     distance_data["distance"] = distance
-#     distance_data["buzzer"] = buzzer
+# @app.route("/upload_distance", methods=["POST"])
+# def upload_distance():
+#     global distance_data
+#     data = request.get_json()
+#     distance_data["sensor1"] = data.get("sensor1")
+#     distance_data["sensor2"] = data.get("sensor2")
+#
+#     # Automatically set buzzer status
+#     # If either sensor detects <= 12 cm, buzzer = ON
+#     if float(data.get("sensor1", 999)) <= 12 or float(data.get("sensor2", 999)) <= 12:
+#         distance_data["buzzer"] = "ON"
+#     else:
+#         distance_data["buzzer"] = "OFF"
+#
 #     return jsonify({"status": "success"})
 #
 # @app.route("/get_distance")

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Distance Sensor</h2>
-<div class="card p-3 shadow mb-3">
+<div class="card p-3 shadow mb-3" style="max-width: 600px;">
   <h4>Current Distance: <span id="dist">--</span> cm</h4>
   
   <!-- Buzzer Indicator -->
@@ -10,7 +10,7 @@
   </div>
 
   <p><strong>Highest Distance:</strong> <span id="maxDist">--</span> cm at <span id="maxTime">--:--:--</span></p>
-  <canvas id="distanceChart" height="150" style="max-height: 150px;"></canvas>
+  <canvas id="distanceChart" height="150" style="max-height: 150px; width: 100%;"></canvas>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
@@ -45,7 +45,7 @@ const dataPoints = [];
 
 const ctx = document.getElementById('distanceChart').getContext('2d');
 const distanceChart = new Chart(ctx, {
-  type: 'bar',
+  type: 'bar',  // vertical bars (default)
   data: {
     labels: [],
     datasets: [{
@@ -57,17 +57,16 @@ const distanceChart = new Chart(ctx, {
     }]
   },
   options: {
-    indexAxis: 'y',  // horizontal bars
     scales: {
-      y: {
+      x: {
         title: { display: true, text: 'Time' },
         ticks: {
-          maxRotation: 0,
+          maxRotation: 45,
           autoSkip: true,
           maxTicksLimit: 10
         }
       },
-      x: {
+      y: {
         beginAtZero: true,
         title: { display: true, text: 'Distance (cm)' },
         suggestedMax: 120

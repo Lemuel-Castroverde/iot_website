@@ -2,8 +2,9 @@
 {% block content %}
 <h2>Distance Sensor with Buzzer</h2>
 <div class="card p-3 shadow">
-  <h4>Distance: <span id="dist">--</span> cm</h4>
+  <h4>Current Distance: <span id="dist">--</span> cm</h4>
   <h4>Buzzer: <span id="buzzer">OFF</span></h4>
+  <h4>Max Distance (Last Minute): <span id="maxDist">--</span> cm at <span id="maxTime">--</span></h4>
   <canvas id="distanceChart" height="100"></canvas>
 </div>
 
@@ -13,29 +14,34 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-let distHistory = [];
-let labels = [];
+let dataPoints = [];
 
 const ctx = document.getElementById("distanceChart").getContext("2d");
 const distanceChart = new Chart(ctx, {
-  type: "line",
+  type: "bar",
   data: {
-    labels: labels,
+    labels: [],
     datasets: [{
       label: "Distance (cm)",
-      data: distHistory,
-      borderColor: "blue",
-      backgroundColor: "rgba(0, 0, 255, 0.1)",
-      fill: true,
-      tension: 0.2
+      data: [],
+      backgroundColor: "rgba(0, 123, 255, 0.6)"
     }]
   },
   options: {
     responsive: true,
     animation: false,
     scales: {
-      x: { title: { display: true, text: "Time (updates)" } },
-      y: { title: { display: true, text: "Distance (cm)" } }
+      x: {
+        title: { display: true, text: "Time" },
+        ticks: {
+          autoSkip: true,
+          maxTicksLimit: 10
+        }
+      },
+      y: {
+        title: { display: true, text: "Distance (cm)" },
+        beginAtZero: true
+      }
     }
   }
 });
@@ -44,154 +50,43 @@ function fetchData() {
   fetch("/get_distance")
     .then(res => res.json())
     .then(data => {
-      let distance = data.distance;
-      let buzzer = data.buzzer;
+      const now = new Date();
+      const distance = parseFloat(data.distance);
+      const buzzer = data.buzzer;
 
+      // Update text
       document.getElementById("dist").textContent = distance;
       document.getElementById("buzzer").textContent = buzzer;
 
-      // Update graph
-      if (labels.length > 20) { // keep last 20 readings
-        labels.shift();
-        distHistory.shift();
-      }
-      labels.push(new Date().toLocaleTimeString());
-      distHistory.push(parseFloat(distance));
-      distanceChart.update();
-    });
-}
-setInterval(fetchData, 2000);
-</script>
-{% endblock %}
-    animation: false,
-    scales: {
-      x: { title: { display: true, text: "Time (updates)" } },
-      y: { title: { display: true, text: "Distance (cm)" } }
-    }
-  }
-});
+      // Add new data point
+      dataPoints.push({ time: now, value: distance });
 
-function fetchData() {
-  fetch("/get_distance")
-    .then(res => res.json())
-    .then(data => {
-      let distance = data.distance;
-      document.getElementById("dist").textContent = distance;
+      // Filter to keep only last 60 seconds
+      const oneMinuteAgo = new Date(now.getTime() - 60000);
+      dataPoints = dataPoints.filter(dp => dp.time >= oneMinuteAgo);
 
-      // Update graph
-      if (labels.length > 20) { // keep last 20 points
-        labels.shift();
-        distHistory.shift();
-      }
-      labels.push(new Date().toLocaleTimeString());
-      distHistory.push(parseFloat(distance));
-      distanceChart.update();
-    });
-}
-setInterval(fetchData, 2000);
+      // Update chart labels and data
+      distanceChart.data.labels = dataPoints.map(dp =>
+        dp.time.toLocaleTimeString()
+      );
+      distanceChart.data.datasets[0].data = dataPoints.map(dp => dp.value);
 
-
-
-// ===========================================
-// VERSION 2: Two Sensors + Buzzer (COMMENTED)
-// ===========================================
-/*
-<div class="card p-3 shadow">
-  <h4>Sensor 1: <span id="sensor1">--</span> cm</h4>
-  <h4>Sensor 2: <span id="sensor2">--</span> cm</h4>
-  <h4>Buzzer: <span id="buzzer">OFF</span></h4>
-  <canvas id="distanceChart2" height="100"></canvas>
-</div>
-
-<script>
-let dist1History = [];
-let dist2History = [];
-let labels2 = [];
-
-const ctx2 = document.getElementById("distanceChart2").getContext("2d");
-const distanceChart2 = new Chart(ctx2, {
-  type: "line",
-  data: {
-    labels: labels2,
-    datasets: [
-      {
-        label: "Sensor 1 (cm)",
-        data: dist1History,
-        borderColor: "blue",
-        backgroundColor: "rgba(0, 0, 255, 0.1)",
-        fill: true,
-        tension: 0.2
-      },
-      {
-        label: "Sensor 2 (cm)",
-        data: dist2History,
-        borderColor: "green",
-        backgroundColor: "rgba(0, 255, 0, 0.1)",
-        fill: true,
-        tension: 0.2
-      }
-    ]
-  },
-  options: {
-    responsive: true,
-    animation: false,
-    scales: {
-      x: { title: { display: true, text: "Time (updates)" } },
-      y: { title: { display: true, text: "Distance (cm)" } }
-    }
-  }
-});
-
-function fetchData2() {
-  fetch("/get_distance")
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("sensor1").textContent = data.sensor1;
-      document.getElementById("sensor2").textContent = data.sensor2;
-      document.getElementById("buzzer").textContent = data.buzzer;
-
-      // Update graph
-      if (labels2.length > 20) {
-        labels2.shift();
-        dist1History.shift();
-        dist2History.shift();
-      }
-      labels2.push(new Date().toLocaleTimeString());
-      dist1History.push(parseFloat(data.sensor1));
-      dist2History.push(parseFloat(data.sensor2));
-      distanceChart2.update();
-    });
-}
-setInterval(fetchData2, 2000);
-</script>
-*/
-</script>
-{% endblock %}
-      // Update sensor 1
-      document.getElementById("sensor1").textContent = data.sensor1 || data.distance;
-
-      // Uncomment this line if you add a 2nd sensor
-      // document.getElementById("sensor2").textContent = data.sensor2;
-
-      /* Uncomment this block when buzzer is integrated */
-      /*
-      let buzzerBox = document.getElementById("buzzerBox");
-      let buzzerStatus = document.getElementById("buzzerStatus");
-
-      if (data.buzzer === "ON") {
-        buzzerBox.style.display = "block";
-        buzzerBox.classList.add("blinking");
-        buzzerStatus.innerText = "BUZZER ACTIVE!";
+      // Find max value and when it occurred
+      if (dataPoints.length > 0) {
+        const maxPoint = dataPoints.reduce((prev, current) =>
+          current.value > prev.value ? current : prev
+        );
+        document.getElementById("maxDist").textContent = maxPoint.value.toFixed(2);
+        document.getElementById("maxTime").textContent = maxPoint.time.toLocaleTimeString();
       } else {
-        buzzerBox.style.display = "block";
-        buzzerBox.classList.remove("blinking");
-        buzzerBox.style.background = "lightgreen";
-        buzzerBox.style.color = "black";
-        buzzerStatus.innerText = "Buzzer OFF";
+        document.getElementById("maxDist").textContent = "--";
+        document.getElementById("maxTime").textContent = "--";
       }
-      */
+
+      distanceChart.update();
     });
 }
+
 setInterval(fetchData, 2000);
 </script>
 {% endblock %}

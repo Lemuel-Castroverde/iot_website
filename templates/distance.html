@@ -1,92 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Distance Sensor with Buzzer</h2>
+<h2>Distance Sensor</h2>
 <div class="card p-3 shadow">
-  <h4>Current Distance: <span id="dist">--</span> cm</h4>
-  <h4>Buzzer: <span id="buzzer">OFF</span></h4>
-  <h4>Max Distance (Last Minute): <span id="maxDist">--</span> cm at <span id="maxTime">--</span></h4>
-  <canvas id="distanceChart" height="100"></canvas>
+  <h4>Distance: <span id="dist">--</span> cm</h4>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-let dataPoints = [];
-
-const ctx = document.getElementById("distanceChart").getContext("2d");
-const distanceChart = new Chart(ctx, {
-  type: "bar",
-  data: {
-    labels: [],
-    datasets: [{
-      label: "Distance (cm)",
-      data: [],
-      backgroundColor: "rgba(0, 123, 255, 0.6)"
-    }]
-  },
-  options: {
-    responsive: true,
-    animation: false,
-    scales: {
-      x: {
-        title: { display: true, text: "Time" },
-        ticks: {
-          autoSkip: true,
-          maxTicksLimit: 10
-        }
-      },
-      y: {
-        title: { display: true, text: "Distance (cm)" },
-        beginAtZero: true
-      }
-    }
-  }
-});
-
 function fetchData() {
   fetch("/get_distance")
     .then(res => res.json())
     .then(data => {
-      const now = new Date();
-      const distance = parseFloat(data.distance);
-      const buzzer = data.buzzer;
-
-      // Update text
-      document.getElementById("dist").textContent = distance;
-      document.getElementById("buzzer").textContent = buzzer;
-
-      // Add new data point
-      dataPoints.push({ time: now, value: distance });
-
-      // Filter to keep only last 60 seconds
-      const oneMinuteAgo = new Date(now.getTime() - 60000);
-      dataPoints = dataPoints.filter(dp => dp.time >= oneMinuteAgo);
-
-      // Update chart labels and data
-      distanceChart.data.labels = dataPoints.map(dp =>
-        dp.time.toLocaleTimeString()
-      );
-      distanceChart.data.datasets[0].data = dataPoints.map(dp => dp.value);
-
-      // Find max value and when it occurred
-      if (dataPoints.length > 0) {
-        const maxPoint = dataPoints.reduce((prev, current) =>
-          current.value > prev.value ? current : prev
-        );
-        document.getElementById("maxDist").textContent = maxPoint.value.toFixed(2);
-        document.getElementById("maxTime").textContent = maxPoint.time.toLocaleTimeString();
-      } else {
-        document.getElementById("maxDist").textContent = "--";
-        document.getElementById("maxTime").textContent = "--";
-      }
-
-      distanceChart.update();
+      document.getElementById("dist").textContent = data.distance;
     });
 }
-
 setInterval(fetchData, 2000);
 </script>
 {% endblock %}

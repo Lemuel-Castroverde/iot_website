@@ -13,19 +13,13 @@ def home():
 # ----------------------
 # Activity Pages
 # ----------------------
-
 @app.route('/temp_humidity')
 def temp_humidity():
     return render_template("temp_humidity.html")
 
-
-@app.route("/get_distance")
-def get_distance():
-    s1 = round(random.uniform(5, 100), 2)
-    s2 = round(random.uniform(5, 100), 2)
-    buzzer = "ON" if (s1 <= 12 or s2 <= 12) else "OFF"
-    return jsonify({"sensor1": s1, "sensor2": s2, "buzzer": buzzer})
-
+@app.route('/distance')
+def distance():
+    return render_template("distance.html")
 
 @app.route('/motion_camera')
 def motion_camera():

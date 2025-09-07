@@ -17,9 +17,16 @@ def home():
 def temp_humidity():
     return render_template("temp_humidity.html")
 
-@app.route('/distance')
-def distance():
-    return render_template("distance.html")
+@app.route('/get_distance')
+def get_distance():
+    distance = round(random.uniform(5, 100), 2)  # Simulated sensor reading
+    buzzer = "ON" if distance <= 12 else "OFF"
+
+    data = {
+        "distance": distance,
+        "buzzer": buzzer
+    }
+    return jsonify(data)
 
 @app.route('/motion_camera')
 def motion_camera():
@@ -127,27 +134,41 @@ if __name__ == "__main__":
 # =====================================================
 # ACTIVITY 2: Distance Sensor + Buzzer
 # =====================================================
-# distance_data = {"sensor1": "--", "sensor2": "--", "buzzer": "OFF"}
+# distance_data = {"distance": "--"}
 #
 # @app.route("/upload_distance", methods=["POST"])
 # def upload_distance():
 #     global distance_data
 #     data = request.get_json()
-#     distance_data["sensor1"] = data.get("sensor1")
-#     distance_data["sensor2"] = data.get("sensor2")
-#
-#     # Automatically set buzzer status
-#     # If either sensor detects <= 12 cm, buzzer = ON
-#     if float(data.get("sensor1", 999)) <= 12 or float(data.get("sensor2", 999)) <= 12:
-#         distance_data["buzzer"] = "ON"
-#     else:
-#         distance_data["buzzer"] = "OFF"
-#
+#     distance_data["distance"] = data["distance"]
 #     return jsonify({"status": "success"})
 #
 # @app.route("/get_distance")
 # def get_distance():
 #     return jsonify(distance_data)
+
+# distance_data = {"distance": "--", "buzzer": "OFF"}
+
+# @app.route("/upload_distance", methods=["POST"])
+# def upload_distance():
+#     global distance_data
+#     data = request.get_json()
+#     distance = float(data.get("distance", 999))  # default to very high if missing
+
+    # Apply buzzer logic
+#     buzzer = "ON" if distance <= 12 else "OFF"
+
+    # Save updated data
+#     distance_data["distance"] = distance
+#     distance_data["buzzer"] = buzzer
+
+#     return jsonify({"status": "success"})
+
+# @app.route("/get_distance")
+# def get_distance():
+#     return jsonify(distance_data)
+
+
 
 
 # =====================================================

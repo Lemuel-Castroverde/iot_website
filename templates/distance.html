@@ -1,37 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Distance Sensor</h2>
+<h2>Distance Sensors</h2>
+
 <div class="card p-3 shadow mb-3" style="max-width: 750px;">
-  <h4>Current Distance: <span id="dist">--</span> cm</h4>
-  
+  <h4>Current Distance:</h4>
+  <p>Sensor 1: <span id="dist1">--</span> cm</p>
+  <p>Sensor 2: <span id="dist2">--</span> cm</p>
+
   <!-- Buzzer Indicator -->
   <div id="buzzer" class="buzzer-off" title="Buzzer status: OFF" style="font-size: 2.5rem; margin: 15px 0;">
     🔔
   </div>
 
-  <p><strong>Highest Distance:</strong> <span id="maxDist">--</span> cm at <span id="maxTime">--:--:--</span></p>
-  <canvas id="distanceChart" height="300" style="max-height: 300px; width: 100%;"></canvas>
+  <p><strong>Highest Sensor 1:</strong> <span id="maxDist1">--</span> cm at <span id="maxTime1">--:--:--</span></p>
+  <p><strong>Highest Sensor 2:</strong> <span id="maxDist2">--</span> cm at <span id="maxTime2">--:--:--</span></p>
+
+  <!-- Two strip (dot-only) charts -->
+  <canvas id="sensor1Chart" height="200" style="max-height: 200px; width: 100%; margin-bottom: 20px;"></canvas>
+  <canvas id="sensor2Chart" height="200" style="max-height: 200px; width: 100%;"></canvas>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
-<!-- Include Chart.js from CDN -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-  /* Buzzer OFF style */
   .buzzer-off {
     color: gray;
     transition: color 0.3s ease;
   }
-
-  /* Buzzer ON style */
   .buzzer-on {
     color: red;
     animation: buzzer-blink 1s infinite;
   }
-
-  /* Blinking animation */
   @keyframes buzzer-blink {
     0%, 50%, 100% { opacity: 1; }
     25%, 75% { opacity: 0.3; }
@@ -39,38 +40,35 @@
 </style>
 
 <script>
-const MAX_DATA_AGE_MS = 60000;  // 60 seconds
-const MAX_DATA_POINTS = 15;     // show last 15 points max
-const dataPoints = [];
+const MAX_DATA_AGE_MS = 60000;
+const MAX_DATA_POINTS = 15;
 
-const ctx = document.getElementById('distanceChart').getContext('2d');
-const distanceChart = new Chart(ctx, {
-  type: 'bar',  // vertical bars (default)
+const dataPoints1 = [];
+const dataPoints2 = [];
+
+const ctx1 = document.getElementById('sensor1Chart').getContext('2d');
+const ctx2 = document.getElementById('sensor2Chart').getContext('2d');
+
+const sensor1Chart = new Chart(ctx1, {
+  type: 'line',  // Use line to plot dots (strip graph)
   data: {
     labels: [],
     datasets: [{
-      label: 'Distance (cm)',
+      label: 'Sensor 1 Distance (cm)',
       data: [],
-      backgroundColor: 'rgba(54, 162, 235, 0.7)',
-      borderColor: 'rgba(54, 162, 235, 1)',
-      borderWidth: 1,
+      borderColor: 'rgba(255, 99, 132, 1)',   // Color of the dots
+      backgroundColor: 'rgba(255, 99, 132, 0.7)',  // Fill for dots
+      fill: false,
+      tension: 0.3,
+      showLine: false,           // Disable line, show only dots
+      pointRadius: 5,            // Size of the dot
+      pointHoverRadius: 7        // Size of the dot when hovered
     }]
   },
   options: {
     scales: {
-      x: {
-        title: { display: true, text: 'Time' },
-        ticks: {
-          maxRotation: 45,
-          autoSkip: true,
-          maxTicksLimit: 10
-        }
-      },
-      y: {
-        beginAtZero: true,
-        title: { display: true, text: 'Distance (cm)' },
-        suggestedMax: 120
-      }
+      x: { title: { display: true, text: 'Time' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' }, suggestedMax: 120 }
     },
     animation: false,
     responsive: true,
@@ -78,28 +76,69 @@ const distanceChart = new Chart(ctx, {
   }
 });
 
-function updateChart() {
+const sensor2Chart = new Chart(ctx2, {
+  type: 'line',  // Use line to plot dots (strip graph)
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Sensor 2 Distance (cm)',
+      data: [],
+      borderColor: 'rgba(54, 162, 235, 1)',   // Color of the dots
+      backgroundColor: 'rgba(54, 162, 235, 0.7)',  // Fill for dots
+      fill: false,
+      tension: 0.3,
+      showLine: false,           // Disable line, show only dots
+      pointRadius: 5,            // Size of the dot
+      pointHoverRadius: 7        // Size of the dot when hovered
+    }]
+  },
+  options: {
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' }, suggestedMax: 120 }
+    },
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+
+function updateCharts() {
   const now = Date.now();
 
-  // Remove data older than 60 seconds
-  while (dataPoints.length && now - dataPoints[0].time > MAX_DATA_AGE_MS) {
-    dataPoints.shift();
+  [dataPoints1, dataPoints2].forEach(dataArr => {
+    while (dataArr.length && now - dataArr[0].time > MAX_DATA_AGE_MS) {
+      dataArr.shift();
+    }
+  });
+
+  const recent1 = dataPoints1.slice(-MAX_DATA_POINTS);
+  const recent2 = dataPoints2.slice(-MAX_DATA_POINTS);
+
+  sensor1Chart.data.labels = recent1.map(dp => new Date(dp.time).toLocaleTimeString());
+  sensor1Chart.data.datasets[0].data = recent1.map(dp => dp.value);
+  sensor1Chart.update();
+
+  sensor2Chart.data.labels = recent2.map(dp => new Date(dp.time).toLocaleTimeString());
+  sensor2Chart.data.datasets[0].data = recent2.map(dp => dp.value);
+  sensor2Chart.update();
+
+  if (recent1.length > 0) {
+    let max1 = recent1.reduce((max, dp) => dp.value > max.value ? dp : max, recent1[0]);
+    document.getElementById('maxDist1').textContent = max1.value.toFixed(2);
+    document.getElementById('maxTime1').textContent = new Date(max1.time).toLocaleTimeString();
+  } else {
+    document.getElementById('maxDist1').textContent = "--";
+    document.getElementById('maxTime1').textContent = "--:--:--";
   }
 
-  // Limit to last MAX_DATA_POINTS points
-  const recentData = dataPoints.slice(-MAX_DATA_POINTS);
-
-  distanceChart.data.labels = recentData.map(dp => new Date(dp.time).toLocaleTimeString());
-  distanceChart.data.datasets[0].data = recentData.map(dp => dp.value);
-  distanceChart.update();
-
-  if (recentData.length > 0) {
-    let maxPoint = recentData.reduce((max, dp) => dp.value > max.value ? dp : max, recentData[0]);
-    document.getElementById('maxDist').textContent = maxPoint.value.toFixed(2);
-    document.getElementById('maxTime').textContent = new Date(maxPoint.time).toLocaleTimeString();
+  if (recent2.length > 0) {
+    let max2 = recent2.reduce((max, dp) => dp.value > max.value ? dp : max, recent2[0]);
+    document.getElementById('maxDist2').textContent = max2.value.toFixed(2);
+    document.getElementById('maxTime2').textContent = new Date(max2.time).toLocaleTimeString();
   } else {
-    document.getElementById('maxDist').textContent = "--";
-    document.getElementById('maxTime').textContent = "--:--:--";
+    document.getElementById('maxDist2').textContent = "--";
+    document.getElementById('maxTime2').textContent = "--:--:--";
   }
 }
 
@@ -123,16 +162,23 @@ function fetchData() {
       return res.json();
     })
     .then(data => {
-      const dist = parseFloat(data.distance);
-      document.getElementById("dist").textContent = dist.toFixed(2);
+      const s1 = parseFloat(data.sensor1);
+      const s2 = parseFloat(data.sensor2);
+
+      document.getElementById("dist1").textContent = s1.toFixed(2);
+      document.getElementById("dist2").textContent = s2.toFixed(2);
       updateBuzzer(data.buzzer);
 
-      dataPoints.push({time: Date.now(), value: dist});
-      updateChart();
+      const now = Date.now();
+      dataPoints1.push({ time: now, value: s1 });
+      dataPoints2.push({ time: now, value: s2 });
+
+      updateCharts();
     })
     .catch(err => {
       console.error("Error fetching distance:", err);
-      document.getElementById("dist").textContent = "--";
+      document.getElementById("dist1").textContent = "--";
+      document.getElementById("dist2").textContent = "--";
       updateBuzzer("OFF");
     });
 }

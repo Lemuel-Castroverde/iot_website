@@ -16,29 +16,10 @@ def home():
 @app.route('/temp_humidity')
 def temp_humidity():
     return render_template("temp_humidity.html")
-    
-# ----------------------
-# Example API Endpoints (dummy data for testing)
-# Replace with real sensor logic later
-# ----------------------
-@app.route('/get_temp_humidity')
-def get_temp_humidity():
-    data = {
-        "temperature": round(random.uniform(20, 30), 2),
-        "humidity": round(random.uniform(40, 60), 2)
-    }
-    return jsonify(data)
 
-# =====================================================
-# UPDATED DUMMY ENDPOINT for Activity 2 (with buzzer simulation)
-# =====================================================
-@app.route('/get_distance')
-def get_distance():
-    distance = round(random.uniform(5, 100), 2)
-    buzzer = "ON" if distance <= 12 else "OFF"
-    data = {"distance": distance, "buzzer": buzzer}
-    return jsonify(data)
-
+@app.route('/distance')
+def distance():
+    return render_template("distance.html")
 
 @app.route('/motion_camera')
 def motion_camera():
@@ -127,25 +108,16 @@ if __name__ == "__main__":
 # def get_temp_humid():
 #     return jsonify(temp_humid_data)
 
-# # =====================================================
-# ACTIVITY 2: Distance Sensor + Buzzer
 # =====================================================
-# distance_data = {"distance": "--", "buzzer": "OFF"}
+# ACTIVITY 2: Distance Sensor
+# =====================================================
+# distance_data = {"distance": "--"}
 #
 # @app.route("/upload_distance", methods=["POST"])
 # def upload_distance():
 #     global distance_data
 #     data = request.get_json()
-#     distance = float(data.get("distance", 999))
-#     distance_data["distance"] = distance
-#
-#     # Automatically set buzzer status
-#     # If sensor detects <= 12 cm, buzzer = ON
-#     if distance <= 12:
-#         distance_data["buzzer"] = "ON"
-#     else:
-#         distance_data["buzzer"] = "OFF"
-#
+#     distance_data["distance"] = data["distance"]
 #     return jsonify({"status": "success"})
 #
 # @app.route("/get_distance")

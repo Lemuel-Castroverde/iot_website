@@ -2,8 +2,30 @@
 {% block content %}
 <h2>Distance Sensor</h2>
 <div class="card p-3 shadow">
-  <h4>Distance: <span id="dist">--</span> cm</h4>
+  <h4>Sensor 1 Distance: <span id="sensor1">--</span> cm</h4>
+
+  <!-- Uncomment this line if a 2nd ultrasonic sensor is added -->
+  <!-- <h4>Sensor 2 Distance: <span id="sensor2">--</span> cm</h4> -->
 </div>
+
+<!-- Buzzer indicator (commented for now) -->
+<!--
+<div id="buzzerBox" class="mt-3 p-3 rounded shadow" style="display:none;">
+  <strong id="buzzerStatus">Buzzer OFF</strong>
+</div>
+
+<style>
+/* Blinking animation for buzzer alert */
+@keyframes blink {
+  0%   { background-color: red; color: white; }
+  50%  { background-color: darkred; color: yellow; }
+  100% { background-color: red; color: white; }
+}
+.blinking {
+  animation: blink 1s infinite;
+}
+</style>
+-->
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
@@ -12,7 +34,29 @@ function fetchData() {
   fetch("/get_distance")
     .then(res => res.json())
     .then(data => {
-      document.getElementById("dist").textContent = data.distance;
+      // Update sensor 1
+      document.getElementById("sensor1").textContent = data.sensor1 || data.distance;
+
+      // Uncomment this line if you add a 2nd sensor
+      // document.getElementById("sensor2").textContent = data.sensor2;
+
+      /* Uncomment this block when buzzer is integrated */
+      /*
+      let buzzerBox = document.getElementById("buzzerBox");
+      let buzzerStatus = document.getElementById("buzzerStatus");
+
+      if (data.buzzer === "ON") {
+        buzzerBox.style.display = "block";
+        buzzerBox.classList.add("blinking");
+        buzzerStatus.innerText = "BUZZER ACTIVE!";
+      } else {
+        buzzerBox.style.display = "block";
+        buzzerBox.classList.remove("blinking");
+        buzzerBox.style.background = "lightgreen";
+        buzzerBox.style.color = "black";
+        buzzerStatus.innerText = "Buzzer OFF";
+      }
+      */
     });
 }
 setInterval(fetchData, 2000);

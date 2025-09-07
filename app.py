@@ -125,6 +125,32 @@ if __name__ == "__main__":
 #     return jsonify(distance_data)
 
 # =====================================================
+# ACTIVITY 2: Distance Sensor + Buzzer
+# =====================================================
+# distance_data = {"sensor1": "--", "sensor2": "--", "buzzer": "OFF"}
+#
+# @app.route("/upload_distance", methods=["POST"])
+# def upload_distance():
+#     global distance_data
+#     data = request.get_json()
+#     distance_data["sensor1"] = data.get("sensor1")
+#     distance_data["sensor2"] = data.get("sensor2")
+#
+#     # Automatically set buzzer status
+#     # If either sensor detects <= 12 cm, buzzer = ON
+#     if float(data.get("sensor1", 999)) <= 12 or float(data.get("sensor2", 999)) <= 12:
+#         distance_data["buzzer"] = "ON"
+#     else:
+#         distance_data["buzzer"] = "OFF"
+#
+#     return jsonify({"status": "success"})
+#
+# @app.route("/get_distance")
+# def get_distance():
+#     return jsonify(distance_data)
+
+
+# =====================================================
 # ACTIVITY 3: Motion Sensor + Camera
 # =====================================================
 # motion_camera_data = {"motion": "--", "image_url": "--"}

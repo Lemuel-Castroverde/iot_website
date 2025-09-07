@@ -56,9 +56,16 @@ const distanceChart = new Chart(ctx, {
     }]
   },
   options: {
+    indexAxis: 'y',  // <--- this makes the bar chart horizontal
     scales: {
-      x: { title: { display: true, text: 'Time' } },
-      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' }, suggestedMax: 120 }
+      y: {  // now y-axis is the category (time)
+        title: { display: true, text: 'Time' }
+      },
+      x: {  // x-axis is numeric distance
+        beginAtZero: true,
+        title: { display: true, text: 'Distance (cm)' },
+        suggestedMax: 120
+      }
     },
     animation: false,
     responsive: true,

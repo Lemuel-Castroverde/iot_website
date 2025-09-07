@@ -19,14 +19,12 @@ def temp_humidity():
 
 @app.route('/get_distance')
 def get_distance():
-    distance = round(random.uniform(5, 100), 2)  # Simulated sensor reading
+    distance = round(random.uniform(5, 100), 2)
     buzzer = "ON" if distance <= 12 else "OFF"
-
-    data = {
+    return jsonify({
         "distance": distance,
         "buzzer": buzzer
-    }
-    return jsonify(data)
+    })
 
 @app.route('/motion_camera')
 def motion_camera():
@@ -118,57 +116,26 @@ if __name__ == "__main__":
 # =====================================================
 # ACTIVITY 2: Distance Sensor
 # =====================================================
-# distance_data = {"distance": "--"}
-#
-# @app.route("/upload_distance", methods=["POST"])
-# def upload_distance():
-#     global distance_data
-#     data = request.get_json()
-#     distance_data["distance"] = data["distance"]
-#     return jsonify({"status": "success"})
-#
-# @app.route("/get_distance")
-# def get_distance():
-#     return jsonify(distance_data)
-
-# =====================================================
-# ACTIVITY 2: Distance Sensor + Buzzer
-# =====================================================
-# distance_data = {"distance": "--"}
-#
-# @app.route("/upload_distance", methods=["POST"])
-# def upload_distance():
-#     global distance_data
-#     data = request.get_json()
-#     distance_data["distance"] = data["distance"]
-#     return jsonify({"status": "success"})
-#
-# @app.route("/get_distance")
-# def get_distance():
-#     return jsonify(distance_data)
-
 # distance_data = {"distance": "--", "buzzer": "OFF"}
-
+#
 # @app.route("/upload_distance", methods=["POST"])
 # def upload_distance():
 #     global distance_data
 #     data = request.get_json()
-#     distance = float(data.get("distance", 999))  # default to very high if missing
-
-    # Apply buzzer logic
+#     try:
+#         distance = float(data.get("distance", 999))
+#     except (ValueError, TypeError):
+#         distance = 999
+#
 #     buzzer = "ON" if distance <= 12 else "OFF"
-
-    # Save updated data
+#
 #     distance_data["distance"] = distance
 #     distance_data["buzzer"] = buzzer
-
 #     return jsonify({"status": "success"})
-
+#
 # @app.route("/get_distance")
 # def get_distance():
 #     return jsonify(distance_data)
-
-
 
 
 # =====================================================

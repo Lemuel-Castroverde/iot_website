@@ -26,14 +26,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-  .buzzer-off {
-    color: gray;
-    transition: color 0.3s ease;
-  }
-  .buzzer-on {
-    color: red;
-    animation: buzzer-blink 1s infinite;
-  }
+  .buzzer-off { color: gray; transition: color 0.3s ease; }
+  .buzzer-on { color: red; animation: buzzer-blink 1s infinite; }
   @keyframes buzzer-blink {
     0%, 50%, 100% { opacity: 1; }
     25%, 75% { opacity: 0.3; }
@@ -50,6 +44,7 @@ const dataPoints2 = [];
 const ctx1 = document.getElementById('sensor1Chart').getContext('2d');
 const ctx2 = document.getElementById('sensor2Chart').getContext('2d');
 
+// --- DOT-ONLY STRIP CHARTS ---
 const sensor1Chart = new Chart(ctx1, {
   type: 'line',
   data: { labels: [], datasets: [{
@@ -57,10 +52,9 @@ const sensor1Chart = new Chart(ctx1, {
     data: [],
     borderColor: 'rgba(255, 99, 132, 1)',
     backgroundColor: 'rgba(255, 99, 132, 0.7)',
-    fill: false,
-    showLine: false,
-    pointRadius: 5,
-    pointHoverRadius: 7
+    showLine: false,         // no connecting line
+    pointRadius: 6,          // size of dots
+    pointHoverRadius: 8
   }]},
   options: {
     scales: {
@@ -80,10 +74,9 @@ const sensor2Chart = new Chart(ctx2, {
     data: [],
     borderColor: 'rgba(54, 162, 235, 1)',
     backgroundColor: 'rgba(54, 162, 235, 0.7)',
-    fill: false,
-    showLine: false,
-    pointRadius: 5,
-    pointHoverRadius: 7
+    showLine: false,         // no connecting line
+    pointRadius: 6,
+    pointHoverRadius: 8
   }]},
   options: {
     scales: {
@@ -95,15 +88,14 @@ const sensor2Chart = new Chart(ctx2, {
     maintainAspectRatio: false
   }
 });
+// -----------------------------------
 
 function updateCharts() {
   const now = Date.now();
 
   // prune old data
   [dataPoints1, dataPoints2].forEach(arr => {
-    while (arr.length && now - arr[0].time > MAX_DATA_AGE_MS) {
-      arr.shift();
-    }
+    while (arr.length && now - arr[0].time > MAX_DATA_AGE_MS) arr.shift();
   });
 
   // limit total points
@@ -111,25 +103,23 @@ function updateCharts() {
   if (dataPoints2.length > MAX_DATA_POINTS) dataPoints2.shift();
 
   // update Sensor 1 chart
-  const recent1 = dataPoints1;
-  sensor1Chart.data.labels = recent1.map(dp => new Date(dp.time).toLocaleTimeString());
-  sensor1Chart.data.datasets[0].data = recent1.map(dp => dp.value);
+  sensor1Chart.data.labels = dataPoints1.map(dp => new Date(dp.time).toLocaleTimeString());
+  sensor1Chart.data.datasets[0].data = dataPoints1.map(dp => dp.value);
   sensor1Chart.update();
 
   // update Sensor 2 chart
-  const recent2 = dataPoints2;
-  sensor2Chart.data.labels = recent2.map(dp => new Date(dp.time).toLocaleTimeString());
-  sensor2Chart.data.datasets[0].data = recent2.map(dp => dp.value);
+  sensor2Chart.data.labels = dataPoints2.map(dp => new Date(dp.time).toLocaleTimeString());
+  sensor2Chart.data.datasets[0].data = dataPoints2.map(dp => dp.value);
   sensor2Chart.update();
 
   // highest values (last 1 minute)
-  if (recent1.length > 0) {
-    const max1 = recent1.reduce((max, dp) => dp.value > max.value ? dp : max, recent1[0]);
+  if (dataPoints1.length > 0) {
+    const max1 = dataPoints1.reduce((max, dp) => dp.value > max.value ? dp : max, dataPoints1[0]);
     document.getElementById('maxDist1').textContent = max1.value.toFixed(2);
     document.getElementById('maxTime1').textContent = new Date(max1.time).toLocaleTimeString();
   }
-  if (recent2.length > 0) {
-    const max2 = recent2.reduce((max, dp) => dp.value > max.value ? dp : max, recent2[0]);
+  if (dataPoints2.length > 0) {
+    const max2 = dataPoints2.reduce((max, dp) => dp.value > max.value ? dp : max, dataPoints2[0]);
     document.getElementById('maxDist2').textContent = max2.value.toFixed(2);
     document.getElementById('maxTime2').textContent = new Date(max2.time).toLocaleTimeString();
   }
@@ -163,159 +153,6 @@ function fetchData() {
       const now = Date.now();
       if (!isNaN(s1)) dataPoints1.push({ time: now, value: s1 });
       if (!isNaN(s2)) dataPoints2.push({ time: now, value: s2 });
-
-      updateCharts();
-    })
-    .catch(err => {
-      console.error("Error fetching distance:", err);
-      document.getElementById("dist1").textContent = "--";
-      document.getElementById("dist2").textContent = "--";
-      updateBuzzer("OFF");
-    });
-}
-
-fetchData();
-setInterval(fetchData, 2000);
-</script>
-{% endblock %}
-    0%, 50%, 100% { opacity: 1; }
-    25%, 75% { opacity: 0.3; }
-  }
-</style>
-
-<script>
-const MAX_DATA_AGE_MS = 60000;
-const MAX_DATA_POINTS = 15;
-
-const dataPoints1 = [];
-const dataPoints2 = [];
-
-const ctx1 = document.getElementById('sensor1Chart').getContext('2d');
-const ctx2 = document.getElementById('sensor2Chart').getContext('2d');
-
-const sensor1Chart = new Chart(ctx1, {
-  type: 'line',  // Use line to plot dots (strip graph)
-  data: {
-    labels: [],
-    datasets: [{
-      label: 'Sensor 1 Distance (cm)',
-      data: [],
-      borderColor: 'rgba(255, 99, 132, 1)',   // Color of the dots
-      backgroundColor: 'rgba(255, 99, 132, 0.7)',  // Fill for dots
-      fill: false,
-      tension: 0.3,
-      showLine: false,           // Disable line, show only dots
-      pointRadius: 5,            // Size of the dot
-      pointHoverRadius: 7        // Size of the dot when hovered
-    }]
-  },
-  options: {
-    scales: {
-      x: { title: { display: true, text: 'Time' } },
-      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' }, suggestedMax: 120 }
-    },
-    animation: false,
-    responsive: true,
-    maintainAspectRatio: false
-  }
-});
-
-const sensor2Chart = new Chart(ctx2, {
-  type: 'line',  // Use line to plot dots (strip graph)
-  data: {
-    labels: [],
-    datasets: [{
-      label: 'Sensor 2 Distance (cm)',
-      data: [],
-      borderColor: 'rgba(54, 162, 235, 1)',   // Color of the dots
-      backgroundColor: 'rgba(54, 162, 235, 0.7)',  // Fill for dots
-      fill: false,
-      tension: 0.3,
-      showLine: false,           // Disable line, show only dots
-      pointRadius: 5,            // Size of the dot
-      pointHoverRadius: 7        // Size of the dot when hovered
-    }]
-  },
-  options: {
-    scales: {
-      x: { title: { display: true, text: 'Time' } },
-      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' }, suggestedMax: 120 }
-    },
-    animation: false,
-    responsive: true,
-    maintainAspectRatio: false
-  }
-});
-
-function updateCharts() {
-  const now = Date.now();
-
-  [dataPoints1, dataPoints2].forEach(dataArr => {
-    while (dataArr.length && now - dataArr[0].time > MAX_DATA_AGE_MS) {
-      dataArr.shift();
-    }
-  });
-
-  const recent1 = dataPoints1.slice(-MAX_DATA_POINTS);
-  const recent2 = dataPoints2.slice(-MAX_DATA_POINTS);
-
-  sensor1Chart.data.labels = recent1.map(dp => new Date(dp.time).toLocaleTimeString());
-  sensor1Chart.data.datasets[0].data = recent1.map(dp => dp.value);
-  sensor1Chart.update();
-
-  sensor2Chart.data.labels = recent2.map(dp => new Date(dp.time).toLocaleTimeString());
-  sensor2Chart.data.datasets[0].data = recent2.map(dp => dp.value);
-  sensor2Chart.update();
-
-  if (recent1.length > 0) {
-    let max1 = recent1.reduce((max, dp) => dp.value > max.value ? dp : max, recent1[0]);
-    document.getElementById('maxDist1').textContent = max1.value.toFixed(2);
-    document.getElementById('maxTime1').textContent = new Date(max1.time).toLocaleTimeString();
-  } else {
-    document.getElementById('maxDist1').textContent = "--";
-    document.getElementById('maxTime1').textContent = "--:--:--";
-  }
-
-  if (recent2.length > 0) {
-    let max2 = recent2.reduce((max, dp) => dp.value > max.value ? dp : max, recent2[0]);
-    document.getElementById('maxDist2').textContent = max2.value.toFixed(2);
-    document.getElementById('maxTime2').textContent = new Date(max2.time).toLocaleTimeString();
-  } else {
-    document.getElementById('maxDist2').textContent = "--";
-    document.getElementById('maxTime2').textContent = "--:--:--";
-  }
-}
-
-function updateBuzzer(buzzerStatus) {
-  const buzzerEl = document.getElementById('buzzer');
-  if (buzzerStatus === "ON") {
-    buzzerEl.classList.remove('buzzer-off');
-    buzzerEl.classList.add('buzzer-on');
-    buzzerEl.title = "Buzzer status: ON";
-  } else {
-    buzzerEl.classList.remove('buzzer-on');
-    buzzerEl.classList.add('buzzer-off');
-    buzzerEl.title = "Buzzer status: OFF";
-  }
-}
-
-function fetchData() {
-  fetch("/get_distance?ts=" + Date.now())
-    .then(res => {
-      if (!res.ok) throw new Error("Network response was not ok");
-      return res.json();
-    })
-    .then(data => {
-      const s1 = parseFloat(data.sensor1);
-      const s2 = parseFloat(data.sensor2);
-
-      document.getElementById("dist1").textContent = s1.toFixed(2);
-      document.getElementById("dist2").textContent = s2.toFixed(2);
-      updateBuzzer(data.buzzer);
-
-      const now = Date.now();
-      dataPoints1.push({ time: now, value: s1 });
-      dataPoints2.push({ time: now, value: s2 });
 
       updateCharts();
     })

@@ -24,24 +24,35 @@ def temp_humidity():
 distance_data = {"sensor1": "--", "sensor2": "--", "buzzer": "OFF"}
 
 @app.route("/upload_distance", methods=["POST"])
- def upload_distance():
-     global distance_data
-     data = request.get_json()
-     distance_data["sensor1"] = data.get("sensor1")
-     distance_data["sensor2"] = data.get("sensor2")
+def upload_distance():
+    global distance_data
+    data = request.get_json()
 
-     # Automatically set buzzer status
-     # If either sensor detects <= 12 cm, buzzer = ON
-     if float(data.get("sensor1", 999)) <= 12 or float(data.get("sensor2", 999)) <= 12:
-         distance_data["buzzer"] = "ON"
-     else:
-         distance_data["buzzer"] = "OFF"
+    # Get sensor data and convert to float if it's not empty
+    sensor1 = data.get("sensor1")
+    sensor2 = data.get("sensor2")
 
-     return jsonify({"status": "success"})
+    # Only update the sensor data if valid
+    if sensor1 is not None:
+        distance_data["sensor1"] = float(sensor1)
+    if sensor2 is not None:
+        distance_data["sensor2"] = float(sensor2)
 
- @app.route("/get_distance")
- def get_distance():
-     return jsonify(distance_data)
+    # Automatically set buzzer status
+    # If either sensor detects <= 12 cm, buzzer = ON
+    if (sensor1 is not None and float(sensor1) <= 12) or (sensor2 is not None and float(sensor2) <= 12):
+        distance_data["buzzer"] = "ON"
+    else:
+        distance_data["buzzer"] = "OFF"
+
+    return jsonify({"status": "success"})
+
+@app.route("/get_distance")
+def get_distance():
+    return jsonify(distance_data)
+
+if __name__ == "__main__":
+    app.run(debug=True)
 
 
 

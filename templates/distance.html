@@ -1,20 +1,126 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Distance Sensor</h2>
-<div class="card p-3 shadow">
-  <h4>Distance: <span id="dist">--</span> cm</h4>
+<div class="card p-3 shadow mb-3">
+  <h4>Current Distance: <span id="dist">--</span> cm</h4>
+  
+  <!-- Buzzer Indicator -->
+  <div id="buzzer" class="buzzer-off" title="Buzzer status: OFF" style="font-size: 2.5rem; margin: 15px 0;">
+    🔔
+  </div>
+
+  <p><strong>Highest Distance:</strong> <span id="maxDist">--</span> cm at <span id="maxTime">--:--:--</span></p>
+  <canvas id="distanceChart" height="100"></canvas>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
+<!-- Include Chart.js from CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  /* Buzzer OFF style */
+  .buzzer-off {
+    color: gray;
+    transition: color 0.3s ease;
+  }
+
+  /* Buzzer ON style */
+  .buzzer-on {
+    color: red;
+    animation: buzzer-blink 1s infinite;
+  }
+
+  /* Blinking animation */
+  @keyframes buzzer-blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.3; }
+  }
+</style>
+
 <script>
+const MAX_DATA_AGE_MS = 60000;  // 60 seconds
+const dataPoints = [];
+
+const ctx = document.getElementById('distanceChart').getContext('2d');
+const distanceChart = new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Distance (cm)',
+      data: [],
+      backgroundColor: 'rgba(54, 162, 235, 0.7)',
+      borderColor: 'rgba(54, 162, 235, 1)',
+      borderWidth: 1,
+    }]
+  },
+  options: {
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' }, suggestedMax: 120 }
+    },
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+
+function updateChart() {
+  const now = Date.now();
+  while (dataPoints.length && now - dataPoints[0].time > MAX_DATA_AGE_MS) {
+    dataPoints.shift();
+  }
+
+  distanceChart.data.labels = dataPoints.map(dp => new Date(dp.time).toLocaleTimeString());
+  distanceChart.data.datasets[0].data = dataPoints.map(dp => dp.value);
+  distanceChart.update();
+
+  if (dataPoints.length > 0) {
+    let maxPoint = dataPoints.reduce((max, dp) => dp.value > max.value ? dp : max, dataPoints[0]);
+    document.getElementById('maxDist').textContent = maxPoint.value.toFixed(2);
+    document.getElementById('maxTime').textContent = new Date(maxPoint.time).toLocaleTimeString();
+  } else {
+    document.getElementById('maxDist').textContent = "--";
+    document.getElementById('maxTime').textContent = "--:--:--";
+  }
+}
+
+function updateBuzzer(buzzerStatus) {
+  const buzzerEl = document.getElementById('buzzer');
+  if (buzzerStatus === "ON") {
+    buzzerEl.classList.remove('buzzer-off');
+    buzzerEl.classList.add('buzzer-on');
+    buzzerEl.title = "Buzzer status: ON";
+  } else {
+    buzzerEl.classList.remove('buzzer-on');
+    buzzerEl.classList.add('buzzer-off');
+    buzzerEl.title = "Buzzer status: OFF";
+  }
+}
+
 function fetchData() {
-  fetch("/get_distance")
-    .then(res => res.json())
+  fetch("/get_distance?ts=" + Date.now())
+    .then(res => {
+      if (!res.ok) throw new Error("Network response was not ok");
+      return res.json();
+    })
     .then(data => {
-      document.getElementById("dist").textContent = data.distance;
+      const dist = parseFloat(data.distance);
+      document.getElementById("dist").textContent = dist.toFixed(2);
+      updateBuzzer(data.buzzer);
+
+      dataPoints.push({time: Date.now(), value: dist});
+      updateChart();
+    })
+    .catch(err => {
+      console.error("Error fetching distance:", err);
+      document.getElementById("dist").textContent = "--";
+      updateBuzzer("OFF");
     });
 }
+
+fetchData();
 setInterval(fetchData, 2000);
 </script>
 {% endblock %}

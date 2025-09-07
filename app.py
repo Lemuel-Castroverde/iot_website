@@ -18,7 +18,7 @@ def temp_humidity():
     return render_template("temp_humidity.html")
 
 # =====================================================
-# ACTIVITY 2: Distance Sensor + Buzzer
+# ACTIVITY 2: Distance Sensor (2 Sensors + Buzzer)
 # =====================================================
 
 distance_data = {"sensor1": "--", "sensor2": "--", "buzzer": "OFF"}
@@ -28,21 +28,23 @@ def upload_distance():
     global distance_data
     data = request.get_json()
 
-    # Get sensor data and convert to float if it's not empty
+    # Get sensor data
     sensor1 = data.get("sensor1")
     sensor2 = data.get("sensor2")
 
-    # Only update the sensor data if valid
     if sensor1 is not None:
         distance_data["sensor1"] = float(sensor1)
     if sensor2 is not None:
         distance_data["sensor2"] = float(sensor2)
 
-    # Automatically set buzzer status
-    # If either sensor detects <= 12 cm, buzzer = ON
-    if (sensor1 is not None and float(sensor1) <= 12) or (sensor2 is not None and float(sensor2) <= 12):
-        distance_data["buzzer"] = "ON"
-    else:
+    # Buzzer ON if either sensor ≤ 12 cm
+    try:
+        if (sensor1 is not None and float(sensor1) <= 12) or \
+           (sensor2 is not None and float(sensor2) <= 12):
+            distance_data["buzzer"] = "ON"
+        else:
+            distance_data["buzzer"] = "OFF"
+    except:
         distance_data["buzzer"] = "OFF"
 
     return jsonify({"status": "success"})
@@ -51,8 +53,16 @@ def upload_distance():
 def get_distance():
     return jsonify(distance_data)
 
-if __name__ == "__main__":
-    app.run(debug=True)
+
+# =====================================================
+# DUMMY TESTING ENDPOINT (COMMENTED)
+# =====================================================
+# @app.route("/get_distance")
+# def get_distance():
+#     s1 = round(random.uniform(5, 100), 2)
+#     s2 = round(random.uniform(5, 100), 2)
+#     buzzer = "ON" if (s1 <= 12 or s2 <= 12) else "OFF"
+#     return jsonify({"sensor1": s1, "sensor2": s2, "buzzer": buzzer})
 
 
 

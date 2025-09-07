@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Distance Sensor</h2>
+<h2>Distance Sensor with Buzzer</h2>
 <div class="card p-3 shadow">
   <h4>Distance: <span id="dist">--</span> cm</h4>
+  <h4>Buzzer: <span id="buzzer">OFF</span></h4>
   <canvas id="distanceChart" height="100"></canvas>
 </div>
 
@@ -12,9 +13,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
-// ===============================
-// VERSION 1: Single Sensor + Graph
-// ===============================
 let distHistory = [];
 let labels = [];
 
@@ -34,6 +32,37 @@ const distanceChart = new Chart(ctx, {
   },
   options: {
     responsive: true,
+    animation: false,
+    scales: {
+      x: { title: { display: true, text: "Time (updates)" } },
+      y: { title: { display: true, text: "Distance (cm)" } }
+    }
+  }
+});
+
+function fetchData() {
+  fetch("/get_distance")
+    .then(res => res.json())
+    .then(data => {
+      let distance = data.distance;
+      let buzzer = data.buzzer;
+
+      document.getElementById("dist").textContent = distance;
+      document.getElementById("buzzer").textContent = buzzer;
+
+      // Update graph
+      if (labels.length > 20) { // keep last 20 readings
+        labels.shift();
+        distHistory.shift();
+      }
+      labels.push(new Date().toLocaleTimeString());
+      distHistory.push(parseFloat(distance));
+      distanceChart.update();
+    });
+}
+setInterval(fetchData, 2000);
+</script>
+{% endblock %}
     animation: false,
     scales: {
       x: { title: { display: true, text: "Time (updates)" } },

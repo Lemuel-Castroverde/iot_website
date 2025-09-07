@@ -13,57 +13,18 @@ def home():
 # ----------------------
 # Activity Pages
 # ----------------------
+
 @app.route('/temp_humidity')
 def temp_humidity():
     return render_template("temp_humidity.html")
 
-# =====================================================
-# ACTIVITY 2: Distance Sensor (2 Sensors + Buzzer)
-# =====================================================
-
-distance_data = {"sensor1": "--", "sensor2": "--", "buzzer": "OFF"}
-
-@app.route("/upload_distance", methods=["POST"])
-def upload_distance():
-    global distance_data
-    data = request.get_json()
-
-    # Get sensor data
-    sensor1 = data.get("sensor1")
-    sensor2 = data.get("sensor2")
-
-    if sensor1 is not None:
-        distance_data["sensor1"] = float(sensor1)
-    if sensor2 is not None:
-        distance_data["sensor2"] = float(sensor2)
-
-    # Buzzer ON if either sensor ≤ 12 cm
-    try:
-        if (sensor1 is not None and float(sensor1) <= 12) or \
-           (sensor2 is not None and float(sensor2) <= 12):
-            distance_data["buzzer"] = "ON"
-        else:
-            distance_data["buzzer"] = "OFF"
-    except:
-        distance_data["buzzer"] = "OFF"
-
-    return jsonify({"status": "success"})
 
 @app.route("/get_distance")
 def get_distance():
-    return jsonify(distance_data)
-
-
-# =====================================================
-# DUMMY TESTING ENDPOINT (COMMENTED)
-# =====================================================
-# @app.route("/get_distance")
-# def get_distance():
-#     s1 = round(random.uniform(5, 100), 2)
-#     s2 = round(random.uniform(5, 100), 2)
-#     buzzer = "ON" if (s1 <= 12 or s2 <= 12) else "OFF"
-#     return jsonify({"sensor1": s1, "sensor2": s2, "buzzer": buzzer})
-
+    s1 = round(random.uniform(5, 100), 2)
+    s2 = round(random.uniform(5, 100), 2)
+    buzzer = "ON" if (s1 <= 12 or s2 <= 12) else "OFF"
+    return jsonify({"sensor1": s1, "sensor2": s2, "buzzer": buzzer})
 
 
 @app.route('/motion_camera')

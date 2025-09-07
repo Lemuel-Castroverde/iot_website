@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Distance Sensor</h2>
-<div class="card p-3 shadow mb-3" style="max-width: 600px;">
+<div class="card p-3 shadow mb-3" style="max-width: 750px;">
   <h4>Current Distance: <span id="dist">--</span> cm</h4>
   
   <!-- Buzzer Indicator -->
@@ -10,7 +10,7 @@
   </div>
 
   <p><strong>Highest Distance:</strong> <span id="maxDist">--</span> cm at <span id="maxTime">--:--:--</span></p>
-  <canvas id="distanceChart" height="150" style="max-height: 150px; width: 100%;"></canvas>
+  <canvas id="distanceChart" height="300" style="max-height: 300px; width: 100%;"></canvas>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>

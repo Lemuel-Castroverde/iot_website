@@ -12,8 +12,9 @@
     🔔
   </div>
 
-  <p><strong>Highest Sensor 1:</strong> <span id="maxDist1">--</span> cm at <span id="maxTime1">--:--:--</span></p>
-  <p><strong>Highest Sensor 2:</strong> <span id="maxDist2">--</span> cm at <span id="maxTime2">--:--:--</span></p>
+  <!-- Highest values -->
+  <p><strong>Highest Sensor 1 (last 1 min):</strong> <span id="maxDist1">--</span> cm at <span id="maxTime1">--:--:--</span></p>
+  <p><strong>Highest Sensor 2 (last 1 min):</strong> <span id="maxDist2">--</span> cm at <span id="maxTime2">--:--:--</span></p>
 
   <!-- Two strip (dot-only) charts -->
   <canvas id="sensor1Chart" height="200" style="max-height: 200px; width: 100%; margin-bottom: 20px;"></canvas>
@@ -34,6 +35,149 @@
     animation: buzzer-blink 1s infinite;
   }
   @keyframes buzzer-blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.3; }
+  }
+</style>
+
+<script>
+const MAX_DATA_AGE_MS = 60000;   // keep only 1 min of data
+const MAX_DATA_POINTS = 30;      // at most 30 points per chart
+
+const dataPoints1 = [];
+const dataPoints2 = [];
+
+const ctx1 = document.getElementById('sensor1Chart').getContext('2d');
+const ctx2 = document.getElementById('sensor2Chart').getContext('2d');
+
+const sensor1Chart = new Chart(ctx1, {
+  type: 'line',
+  data: { labels: [], datasets: [{
+    label: 'Sensor 1 Distance (cm)',
+    data: [],
+    borderColor: 'rgba(255, 99, 132, 1)',
+    backgroundColor: 'rgba(255, 99, 132, 0.7)',
+    fill: false,
+    showLine: false,
+    pointRadius: 5,
+    pointHoverRadius: 7
+  }]},
+  options: {
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { beginAtZero: true, suggestedMax: 120, title: { display: true, text: 'Distance (cm)' } }
+    },
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+
+const sensor2Chart = new Chart(ctx2, {
+  type: 'line',
+  data: { labels: [], datasets: [{
+    label: 'Sensor 2 Distance (cm)',
+    data: [],
+    borderColor: 'rgba(54, 162, 235, 1)',
+    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+    fill: false,
+    showLine: false,
+    pointRadius: 5,
+    pointHoverRadius: 7
+  }]},
+  options: {
+    scales: {
+      x: { title: { display: true, text: 'Time' } },
+      y: { beginAtZero: true, suggestedMax: 120, title: { display: true, text: 'Distance (cm)' } }
+    },
+    animation: false,
+    responsive: true,
+    maintainAspectRatio: false
+  }
+});
+
+function updateCharts() {
+  const now = Date.now();
+
+  // prune old data
+  [dataPoints1, dataPoints2].forEach(arr => {
+    while (arr.length && now - arr[0].time > MAX_DATA_AGE_MS) {
+      arr.shift();
+    }
+  });
+
+  // limit total points
+  if (dataPoints1.length > MAX_DATA_POINTS) dataPoints1.shift();
+  if (dataPoints2.length > MAX_DATA_POINTS) dataPoints2.shift();
+
+  // update Sensor 1 chart
+  const recent1 = dataPoints1;
+  sensor1Chart.data.labels = recent1.map(dp => new Date(dp.time).toLocaleTimeString());
+  sensor1Chart.data.datasets[0].data = recent1.map(dp => dp.value);
+  sensor1Chart.update();
+
+  // update Sensor 2 chart
+  const recent2 = dataPoints2;
+  sensor2Chart.data.labels = recent2.map(dp => new Date(dp.time).toLocaleTimeString());
+  sensor2Chart.data.datasets[0].data = recent2.map(dp => dp.value);
+  sensor2Chart.update();
+
+  // highest values (last 1 minute)
+  if (recent1.length > 0) {
+    const max1 = recent1.reduce((max, dp) => dp.value > max.value ? dp : max, recent1[0]);
+    document.getElementById('maxDist1').textContent = max1.value.toFixed(2);
+    document.getElementById('maxTime1').textContent = new Date(max1.time).toLocaleTimeString();
+  }
+  if (recent2.length > 0) {
+    const max2 = recent2.reduce((max, dp) => dp.value > max.value ? dp : max, recent2[0]);
+    document.getElementById('maxDist2').textContent = max2.value.toFixed(2);
+    document.getElementById('maxTime2').textContent = new Date(max2.time).toLocaleTimeString();
+  }
+}
+
+function updateBuzzer(status) {
+  const buzzerEl = document.getElementById('buzzer');
+  if (status === "ON") {
+    buzzerEl.classList.remove('buzzer-off');
+    buzzerEl.classList.add('buzzer-on');
+    buzzerEl.title = "Buzzer status: ON";
+  } else {
+    buzzerEl.classList.remove('buzzer-on');
+    buzzerEl.classList.add('buzzer-off');
+    buzzerEl.title = "Buzzer status: OFF";
+  }
+}
+
+function fetchData() {
+  fetch("/get_distance?ts=" + Date.now())
+    .then(res => res.json())
+    .then(data => {
+      const s1 = parseFloat(data.sensor1);
+      const s2 = parseFloat(data.sensor2);
+
+      if (!isNaN(s1)) document.getElementById("dist1").textContent = s1.toFixed(2);
+      if (!isNaN(s2)) document.getElementById("dist2").textContent = s2.toFixed(2);
+
+      updateBuzzer(data.buzzer);
+
+      const now = Date.now();
+      if (!isNaN(s1)) dataPoints1.push({ time: now, value: s1 });
+      if (!isNaN(s2)) dataPoints2.push({ time: now, value: s2 });
+
+      updateCharts();
+    })
+    .catch(err => {
+      console.error("Error fetching distance:", err);
+      document.getElementById("dist1").textContent = "--";
+      document.getElementById("dist2").textContent = "--";
+      updateBuzzer("OFF");
+    });
+}
+
+fetchData();
+setInterval(fetchData, 2000);
+</script>
+{% endblock %}
     0%, 50%, 100% { opacity: 1; }
     25%, 75% { opacity: 0.3; }
   }

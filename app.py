@@ -17,9 +17,14 @@ def home():
 def temp_humidity():
     return render_template("temp_humidity.html")
 
-@app.route('/distance')
-def distance():
-    return render_template("distance.html")
+@app.route('/get_distance')
+def get_distance():
+    # Simulate distance sensor data
+    dist = round(random.uniform(5, 100), 2)
+    buzzer_status = "ON" if dist <= 12 else "OFF"
+    data = {"distance": dist, "buzzer": buzzer_status}
+    return jsonify(data)
+
 
 @app.route('/motion_camera')
 def motion_camera():

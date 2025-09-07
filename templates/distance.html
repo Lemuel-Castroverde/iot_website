@@ -2,38 +2,142 @@
 {% block content %}
 <h2>Distance Sensor</h2>
 <div class="card p-3 shadow">
-  <h4>Sensor 1 Distance: <span id="sensor1">--</span> cm</h4>
-
-  <!-- Uncomment this line if a 2nd ultrasonic sensor is added -->
-  <!-- <h4>Sensor 2 Distance: <span id="sensor2">--</span> cm</h4> -->
+  <h4>Distance: <span id="dist">--</span> cm</h4>
+  <canvas id="distanceChart" height="100"></canvas>
 </div>
-
-<!-- Buzzer indicator (commented for now) -->
-<!--
-<div id="buzzerBox" class="mt-3 p-3 rounded shadow" style="display:none;">
-  <strong id="buzzerStatus">Buzzer OFF</strong>
-</div>
-
-<style>
-/* Blinking animation for buzzer alert */
-@keyframes blink {
-  0%   { background-color: red; color: white; }
-  50%  { background-color: darkred; color: yellow; }
-  100% { background-color: red; color: white; }
-}
-.blinking {
-  animation: blink 1s infinite;
-}
-</style>
--->
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script>
+// ===============================
+// VERSION 1: Single Sensor + Graph
+// ===============================
+let distHistory = [];
+let labels = [];
+
+const ctx = document.getElementById("distanceChart").getContext("2d");
+const distanceChart = new Chart(ctx, {
+  type: "line",
+  data: {
+    labels: labels,
+    datasets: [{
+      label: "Distance (cm)",
+      data: distHistory,
+      borderColor: "blue",
+      backgroundColor: "rgba(0, 0, 255, 0.1)",
+      fill: true,
+      tension: 0.2
+    }]
+  },
+  options: {
+    responsive: true,
+    animation: false,
+    scales: {
+      x: { title: { display: true, text: "Time (updates)" } },
+      y: { title: { display: true, text: "Distance (cm)" } }
+    }
+  }
+});
+
 function fetchData() {
   fetch("/get_distance")
     .then(res => res.json())
     .then(data => {
+      let distance = data.distance;
+      document.getElementById("dist").textContent = distance;
+
+      // Update graph
+      if (labels.length > 20) { // keep last 20 points
+        labels.shift();
+        distHistory.shift();
+      }
+      labels.push(new Date().toLocaleTimeString());
+      distHistory.push(parseFloat(distance));
+      distanceChart.update();
+    });
+}
+setInterval(fetchData, 2000);
+
+
+
+// ===========================================
+// VERSION 2: Two Sensors + Buzzer (COMMENTED)
+// ===========================================
+/*
+<div class="card p-3 shadow">
+  <h4>Sensor 1: <span id="sensor1">--</span> cm</h4>
+  <h4>Sensor 2: <span id="sensor2">--</span> cm</h4>
+  <h4>Buzzer: <span id="buzzer">OFF</span></h4>
+  <canvas id="distanceChart2" height="100"></canvas>
+</div>
+
+<script>
+let dist1History = [];
+let dist2History = [];
+let labels2 = [];
+
+const ctx2 = document.getElementById("distanceChart2").getContext("2d");
+const distanceChart2 = new Chart(ctx2, {
+  type: "line",
+  data: {
+    labels: labels2,
+    datasets: [
+      {
+        label: "Sensor 1 (cm)",
+        data: dist1History,
+        borderColor: "blue",
+        backgroundColor: "rgba(0, 0, 255, 0.1)",
+        fill: true,
+        tension: 0.2
+      },
+      {
+        label: "Sensor 2 (cm)",
+        data: dist2History,
+        borderColor: "green",
+        backgroundColor: "rgba(0, 255, 0, 0.1)",
+        fill: true,
+        tension: 0.2
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    animation: false,
+    scales: {
+      x: { title: { display: true, text: "Time (updates)" } },
+      y: { title: { display: true, text: "Distance (cm)" } }
+    }
+  }
+});
+
+function fetchData2() {
+  fetch("/get_distance")
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("sensor1").textContent = data.sensor1;
+      document.getElementById("sensor2").textContent = data.sensor2;
+      document.getElementById("buzzer").textContent = data.buzzer;
+
+      // Update graph
+      if (labels2.length > 20) {
+        labels2.shift();
+        dist1History.shift();
+        dist2History.shift();
+      }
+      labels2.push(new Date().toLocaleTimeString());
+      dist1History.push(parseFloat(data.sensor1));
+      dist2History.push(parseFloat(data.sensor2));
+      distanceChart2.update();
+    });
+}
+setInterval(fetchData2, 2000);
+</script>
+*/
+</script>
+{% endblock %}
       // Update sensor 1
       document.getElementById("sensor1").textContent = data.sensor1 || data.distance;
 

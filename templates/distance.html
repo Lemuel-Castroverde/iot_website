@@ -10,7 +10,7 @@
   </div>
 
   <p><strong>Highest Distance:</strong> <span id="maxDist">--</span> cm at <span id="maxTime">--:--:--</span></p>
-  <canvas id="distanceChart" height="100"></canvas>
+  <canvas id="distanceChart" height="150" style="max-height: 150px;"></canvas>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
@@ -40,6 +40,7 @@
 
 <script>
 const MAX_DATA_AGE_MS = 60000;  // 60 seconds
+const MAX_DATA_POINTS = 15;     // show last 15 points max
 const dataPoints = [];
 
 const ctx = document.getElementById('distanceChart').getContext('2d');
@@ -56,12 +57,17 @@ const distanceChart = new Chart(ctx, {
     }]
   },
   options: {
-    indexAxis: 'y',  // <--- this makes the bar chart horizontal
+    indexAxis: 'y',  // horizontal bars
     scales: {
-      y: {  // now y-axis is the category (time)
-        title: { display: true, text: 'Time' }
+      y: {
+        title: { display: true, text: 'Time' },
+        ticks: {
+          maxRotation: 0,
+          autoSkip: true,
+          maxTicksLimit: 10
+        }
       },
-      x: {  // x-axis is numeric distance
+      x: {
         beginAtZero: true,
         title: { display: true, text: 'Distance (cm)' },
         suggestedMax: 120
@@ -75,16 +81,21 @@ const distanceChart = new Chart(ctx, {
 
 function updateChart() {
   const now = Date.now();
+
+  // Remove data older than 60 seconds
   while (dataPoints.length && now - dataPoints[0].time > MAX_DATA_AGE_MS) {
     dataPoints.shift();
   }
 
-  distanceChart.data.labels = dataPoints.map(dp => new Date(dp.time).toLocaleTimeString());
-  distanceChart.data.datasets[0].data = dataPoints.map(dp => dp.value);
+  // Limit to last MAX_DATA_POINTS points
+  const recentData = dataPoints.slice(-MAX_DATA_POINTS);
+
+  distanceChart.data.labels = recentData.map(dp => new Date(dp.time).toLocaleTimeString());
+  distanceChart.data.datasets[0].data = recentData.map(dp => dp.value);
   distanceChart.update();
 
-  if (dataPoints.length > 0) {
-    let maxPoint = dataPoints.reduce((max, dp) => dp.value > max.value ? dp : max, dataPoints[0]);
+  if (recentData.length > 0) {
+    let maxPoint = recentData.reduce((max, dp) => dp.value > max.value ? dp : max, recentData[0]);
     document.getElementById('maxDist').textContent = maxPoint.value.toFixed(2);
     document.getElementById('maxTime').textContent = new Date(maxPoint.time).toLocaleTimeString();
   } else {

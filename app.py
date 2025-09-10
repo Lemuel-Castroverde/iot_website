@@ -13,48 +13,45 @@ def home():
 # ----------------------
 # Activity Pages
 # ----------------------
-@app.route('/temp_humidity')
+@app.route("/temp_humidity")
 def temp_humidity():
-    return render_template("temp_humidity.html")
+    return render_template("act01_temp_humidity.html")
 
-@app.route("/get_distance")
-def get_distance_dummy():
-    s1 = round(random.uniform(5, 100), 2)
-    s2 = round(random.uniform(5, 100), 2)
-    buzzer = "ON" if (s1 <= 12 or s2 <= 12) else "OFF"
-    return jsonify({"sensor1": s1, "sensor2": s2, "buzzer": buzzer})
-    
-@app.route('/motion_camera')
+@app.route("/distance")
+def distance():
+    return render_template("act02_distance.html")
+
+@app.route("/motion_camera")
 def motion_camera():
-    return render_template("motion_camera.html")
+    return render_template("act03_motion_camera.html")
 
-@app.route('/gas_vibration')
+@app.route("/gas_vibration")
 def gas_vibration():
-    return render_template("gas_vibration.html")
+    return render_template("act04_gas_vibration.html")
 
-@app.route('/sound_rain')
+@app.route("/sound_rain")
 def sound_rain():
-    return render_template("sound_rain.html")
+    return render_template("act05_sound_rain.html")
 
-@app.route('/gps')
+@app.route("/gps")
 def gps():
-    return render_template("gps.html")
+    return render_template("act06_gps.html")
 
-@app.route('/voice_led')
+@app.route("/voice_led")
 def voice_led():
-    return render_template("voice_led.html")
+    return render_template("act07_voice_led.html")
 
-@app.route('/tts')
+@app.route("/tts")
 def tts():
-    return render_template("tts.html")
+    return render_template("act08_tts.html")
 
-@app.route('/object_detection')
+@app.route("/object_detection")
 def object_detection():
-    return render_template("object_detection.html")
+    return render_template("act09_object_detection.html")
 
-@app.route('/face_recognition')
+@app.route("/face_recognition")
 def face_recognition():
-    return render_template("face_recognition.html")
+    return render_template("act10_face_recognition.html")
 
 
 # ----------------------

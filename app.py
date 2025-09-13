@@ -23,7 +23,7 @@ def distance():
 
 @app.route("/motion_camera")
 def motion_camera():
-    return render_template("act03_motion_camera.html")
+    return render_template("act03_motion_sensor.html")
 
 @app.route("/gas_vibration")
 def gas_vibration():
@@ -31,7 +31,7 @@ def gas_vibration():
 
 @app.route("/sound_rain")
 def sound_rain():
-    return render_template("act05_sound_rain.html")
+    return render_template("act05_sound_raindrop.html")
 
 @app.route("/gps")
 def gps():

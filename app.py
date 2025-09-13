@@ -13,43 +13,43 @@ def home():
 # ----------------------
 # Activity Pages
 # ----------------------
-@app.route("/temp_humidity")
+@app.route("/act01_temp_humidity")
 def temp_humidity():
     return render_template("act01_temp_humidity.html")
 
-@app.route("/distance")
+@app.route("/act02_distance")
 def distance():
     return render_template("act02_distance.html")
 
-@app.route("/motion_camera")
+@app.route("/act03_motion_sensor")
 def motion_camera():
     return render_template("act03_motion_sensor.html")
 
-@app.route("/gas_vibration")
+@app.route("/act04_gas_vibration")
 def gas_vibration():
     return render_template("act04_gas_vibration.html")
 
-@app.route("/sound_rain")
+@app.route("/act05_sound_raindrop")
 def sound_rain():
     return render_template("act05_sound_raindrop.html")
 
-@app.route("/gps")
+@app.route("/act06_gps")
 def gps():
     return render_template("act06_gps.html")
 
-@app.route("/voice_led")
+@app.route("/act07_voice_led")
 def voice_led():
     return render_template("act07_voice_led.html")
 
-@app.route("/tts")
+@app.route("/act08_tts")
 def tts():
     return render_template("act08_tts.html")
 
-@app.route("/object_detection")
+@app.route("/act09_object_detection")
 def object_detection():
     return render_template("act09_object_detection.html")
 
-@app.route("/face_recognition")
+@app.route("/act10_face_recognition")
 def face_recognition():
     return render_template("act10_face_recognition.html")
 

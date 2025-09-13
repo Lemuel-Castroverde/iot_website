@@ -1,11 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Distance Sensors</h2>
+
 <div class="card p-3 shadow">
   <h4>Sensor 1 Distance: <span id="sensor1">--</span> cm (Max: <span id="sensor1_max">0</span> cm)</h4>
-  <h4>Sensor 2 Distance: <span id="sensor2">--</span> cm (Max: <span id="sensor2_max">0</span> cm)</h4>
+  <canvas id="sensor1Chart" width="800" height="300"></canvas>
+</div>
 
-  <canvas id="distanceChart" width="800" height="400"></canvas>
+<div class="card p-3 shadow mt-3">
+  <h4>Sensor 2 Distance: <span id="sensor2">--</span> cm (Max: <span id="sensor2_max">0</span> cm)</h4>
+  <canvas id="sensor2Chart" width="800" height="300"></canvas>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
@@ -14,59 +18,64 @@
 <script>
 let sensor1Max = 0;
 let sensor2Max = 0;
-let labels = [];
+let timeCounter = 0;
+
 let sensor1Data = [];
 let sensor2Data = [];
 
-const ctx = document.getElementById('distanceChart').getContext('2d');
-const chart = new Chart(ctx, {
-  type: 'line',
+// --- Chart for Sensor 1 ---
+const ctx1 = document.getElementById('sensor1Chart').getContext('2d');
+const sensor1Chart = new Chart(ctx1, {
+  type: 'scatter',
   data: {
-    labels: labels,
-    datasets: [
-      {
-        label: 'Sensor 1',
-        borderColor: 'blue',
-        backgroundColor: 'blue',
-        data: sensor1Data,
-        showLine: false,
-        pointRadius: 5,
-        pointHoverRadius: 7
-      },
-      {
-        label: 'Sensor 2',
-        borderColor: 'green',
-        backgroundColor: 'green',
-        data: sensor2Data,
-        showLine: false,
-        pointRadius: 5,
-        pointHoverRadius: 7
-      }
-    ]
+    datasets: [{
+      label: 'Sensor 1',
+      data: sensor1Data,
+      backgroundColor: 'blue',
+      pointRadius: 5,
+      pointHoverRadius: 7
+    }]
   },
   options: {
     animation: false,
-    responsive: false,      // 👈 fixed size
+    responsive: false,
     maintainAspectRatio: false,
     scales: {
-      x: {
-        title: { display: true, text: 'Time (s)' }
-      },
-      y: {
-        beginAtZero: true,
-        title: { display: true, text: 'Distance (cm)' }
-      }
+      x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } }
     }
   }
 });
 
-
+// --- Chart for Sensor 2 ---
+const ctx2 = document.getElementById('sensor2Chart').getContext('2d');
+const sensor2Chart = new Chart(ctx2, {
+  type: 'scatter',
+  data: {
+    datasets: [{
+      label: 'Sensor 2',
+      data: sensor2Data,
+      backgroundColor: 'green',
+      pointRadius: 5,
+      pointHoverRadius: 7
+    }]
+  },
+  options: {
+    animation: false,
+    responsive: false,
+    maintainAspectRatio: false,
+    scales: {
+      x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } }
+    }
+  }
+});
 
 function fetchData() {
   fetch("/get_distance")
     .then(res => res.json())
     .then(data => {
-      const t = new Date().toLocaleTimeString();
+      timeCounter++; // increase x every second
 
       // Update displayed values
       document.getElementById("sensor1").textContent = data.sensor1;
@@ -78,21 +87,19 @@ function fetchData() {
       document.getElementById("sensor1_max").textContent = sensor1Max;
       document.getElementById("sensor2_max").textContent = sensor2Max;
 
-      // Update chart data
-      labels.push(t);
-      sensor1Data.push(data.sensor1);
-      sensor2Data.push(data.sensor2);
+      // Push new data points
+      sensor1Data.push({ x: timeCounter, y: data.sensor1 });
+      sensor2Data.push({ x: timeCounter, y: data.sensor2 });
 
-      // Keep only 60 points (≈1 min if 1s interval)
-      if (labels.length > 60) {
-        labels.shift();
-        sensor1Data.shift();
-        sensor2Data.shift();
-      }
+      // Keep only 60 points
+      if (sensor1Data.length > 60) sensor1Data.shift();
+      if (sensor2Data.length > 60) sensor2Data.shift();
 
-      chart.update();
+      sensor1Chart.update();
+      sensor2Chart.update();
     });
 }
+
 setInterval(fetchData, 1000); // 1s interval
 </script>
 {% endblock %}

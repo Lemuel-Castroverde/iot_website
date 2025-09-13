@@ -27,24 +27,27 @@ const chart = new Chart(ctx, {
       {
         label: 'Sensor 1',
         borderColor: 'blue',
-        backgroundColor: 'rgba(0,0,255,0.1)',
+        backgroundColor: 'blue',
         data: sensor1Data,
-        fill: true,
-        tension: 0.3
+        showLine: false,     // 👈 hides connecting line
+        pointRadius: 5,      // 👈 dot size
+        pointHoverRadius: 7
       },
       {
         label: 'Sensor 2',
         borderColor: 'green',
-        backgroundColor: 'rgba(0,255,0,0.1)',
+        backgroundColor: 'green',
         data: sensor2Data,
-        fill: true,
-        tension: 0.3
+        showLine: false,
+        pointRadius: 5,
+        pointHoverRadius: 7
       }
     ]
   },
   options: {
     animation: false,
     responsive: true,
+    maintainAspectRatio: false,
     scales: {
       x: {
         title: { display: true, text: 'Time (s)' }
@@ -56,6 +59,7 @@ const chart = new Chart(ctx, {
     }
   }
 });
+
 
 function fetchData() {
   fetch("/get_distance")

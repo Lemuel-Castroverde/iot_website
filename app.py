@@ -13,9 +13,9 @@ def home():
 # ----------------------
 # Activity Pages
 # ----------------------
-@app.route("/act01_temp_humidity")
+@app.route("/act01_humidity_temp")
 def temp_humidity():
-    return render_template("act01_temp_humidity.html")
+    return render_template("act01_humidity_temp.html")
 
 @app.route("/act02_distance")
 def distance():

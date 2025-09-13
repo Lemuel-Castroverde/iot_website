@@ -12,9 +12,24 @@
   <canvas id="sensor2Chart" width="800" height="300"></canvas>
 </div>
 
+<!-- 🔔 Buzzer Indicator -->
+<div class="card p-3 shadow mt-3 text-center">
+  <h4>Buzzer Status</h4>
+  <div id="buzzer" class="buzzer-off" style="font-size: 3rem;">🔔</div>
+</div>
+
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  .buzzer-off { color: gray; transition: color 0.3s ease; }
+  .buzzer-on  { color: red; animation: buzzer-blink 1s infinite; }
+  @keyframes buzzer-blink {
+    0%, 50%, 100% { opacity: 1; }
+    25%, 75% { opacity: 0.3; }
+  }
+</style>
+
 <script>
 let sensor1Max = 0;
 let sensor2Max = 0;
@@ -23,59 +38,45 @@ let timeCounter = 0;
 let sensor1Data = [];
 let sensor2Data = [];
 
-// --- Chart for Sensor 1 ---
 const ctx1 = document.getElementById('sensor1Chart').getContext('2d');
 const sensor1Chart = new Chart(ctx1, {
   type: 'scatter',
-  data: {
-    datasets: [{
-      label: 'Sensor 1',
-      data: sensor1Data,
-      backgroundColor: 'blue',
-      pointRadius: 5,
-      pointHoverRadius: 7
-    }]
-  },
+  data: { datasets: [{ label: 'Sensor 1', data: sensor1Data, backgroundColor: 'blue', pointRadius: 5, pointHoverRadius: 7 }] },
   options: {
-    animation: false,
-    responsive: false,
-    maintainAspectRatio: false,
-    scales: {
-      x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
-      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } }
-    }
+    animation: false, responsive: false, maintainAspectRatio: false,
+    scales: { x: { type: 'linear', title: { display: true, text: 'Time (s)' } }, y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } } }
   }
 });
 
-// --- Chart for Sensor 2 ---
 const ctx2 = document.getElementById('sensor2Chart').getContext('2d');
 const sensor2Chart = new Chart(ctx2, {
   type: 'scatter',
-  data: {
-    datasets: [{
-      label: 'Sensor 2',
-      data: sensor2Data,
-      backgroundColor: 'green',
-      pointRadius: 5,
-      pointHoverRadius: 7
-    }]
-  },
+  data: { datasets: [{ label: 'Sensor 2', data: sensor2Data, backgroundColor: 'green', pointRadius: 5, pointHoverRadius: 7 }] },
   options: {
-    animation: false,
-    responsive: false,
-    maintainAspectRatio: false,
-    scales: {
-      x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
-      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } }
-    }
+    animation: false, responsive: false, maintainAspectRatio: false,
+    scales: { x: { type: 'linear', title: { display: true, text: 'Time (s)' } }, y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } } }
   }
 });
+
+// --- Buzzer update function ---
+function updateBuzzer(s1, s2) {
+  const buzzerEl = document.getElementById("buzzer");
+  if (s1 > 12 || s2 > 12) {
+    buzzerEl.classList.remove("buzzer-off");
+    buzzerEl.classList.add("buzzer-on");
+    buzzerEl.title = "Buzzer ON: Distance > 12cm";
+  } else {
+    buzzerEl.classList.remove("buzzer-on");
+    buzzerEl.classList.add("buzzer-off");
+    buzzerEl.title = "Buzzer OFF";
+  }
+}
 
 function fetchData() {
   fetch("/get_distance")
     .then(res => res.json())
     .then(data => {
-      timeCounter++; // increase x every second
+      timeCounter++;
 
       // Update displayed values
       document.getElementById("sensor1").textContent = data.sensor1;
@@ -87,19 +88,21 @@ function fetchData() {
       document.getElementById("sensor1_max").textContent = sensor1Max;
       document.getElementById("sensor2_max").textContent = sensor2Max;
 
-      // Push new data points
+      // Push new data
       sensor1Data.push({ x: timeCounter, y: data.sensor1 });
       sensor2Data.push({ x: timeCounter, y: data.sensor2 });
 
-      // Keep only 60 points
       if (sensor1Data.length > 60) sensor1Data.shift();
       if (sensor2Data.length > 60) sensor2Data.shift();
 
       sensor1Chart.update();
       sensor2Chart.update();
+
+      // Update buzzer
+      updateBuzzer(data.sensor1, data.sensor2);
     });
 }
 
-setInterval(fetchData, 1000); // 1s interval
+setInterval(fetchData, 1000);
 </script>
 {% endblock %}

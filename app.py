@@ -68,21 +68,21 @@ def get_temp_humidity():
     }
     return jsonify(data)
 
-#@app.route("/data")
-#def data():
-#    d1 = get_distance(TRIG1, ECHO1)
-#    d2 = get_distance(TRIG2, ECHO2)
+@app.route("/data")
+def data():
+    d1 = get_distance(TRIG1, ECHO1)
+    d2 = get_distance(TRIG2, ECHO2)
 
-#    print(f"Sensor1: {d1:.1f} cm | Sensor2: {d2:.1f} cm")
-#    display_data(d1, d2)
+    print(f"Sensor1: {d1:.1f} cm | Sensor2: {d2:.1f} cm")
+    display_data(d1, d2)
 
     # Buzzer logic
-#    if (d1 != -1 and d1 >= 12) or (d2 != -1 and d2 >= 12):
-#        control_buzzer(True)
-#    else:
-#        control_buzzer(False)
+    if (d1 != -1 and d1 >= 12) or (d2 != -1 and d2 >= 12):
+        control_buzzer(True)
+    else:
+        control_buzzer(False)
 
-#    return jsonify({"sensor1": d1, "sensor2": d2, "buzzer": buzzer_state})
+    return jsonify({"sensor1": d1, "sensor2": d2, "buzzer": buzzer_state})
 
 # --- NEW: Pi posts sensor data here ---
 @app.route("/update", methods=["POST"])

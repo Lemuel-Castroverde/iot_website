@@ -1,115 +1,116 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Distance Sensors</h2>
+<h2>Ultrasonic Sensor Dashboard</h2>
 
 <div class="card p-3 shadow">
-  <h4>Sensor 1 Distance: <span id="sensor1">--</span> cm (Max: <span id="sensor1_max">0</span> cm)</h4>
-  <canvas id="sensor1Chart" width="800" height="300"></canvas>
-</div>
-
-<div class="card p-3 shadow mt-3">
-  <h4>Sensor 2 Distance: <span id="sensor2">--</span> cm (Max: <span id="sensor2_max">0</span> cm)</h4>
-  <canvas id="sensor2Chart" width="800" height="300"></canvas>
+  <h4>Sensor 1 & Sensor 2 (Live)</h4>
+  <canvas id="sensorChart" width="800" height="300"></canvas>
 </div>
 
 <!-- 🔔 Buzzer Indicator -->
 <div class="card p-3 shadow mt-3 text-center">
   <h4>Buzzer Status</h4>
-  <div id="buzzer" class="buzzer-off" style="font-size: 3rem;">🔔</div>
+  <div id="buzzerIcon" style="font-size: 4rem;">🔕</div>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-  .buzzer-off { color: gray; transition: color 0.3s ease; }
-  .buzzer-on  { color: red; animation: buzzer-blink 1s infinite; }
-  @keyframes buzzer-blink {
-    0%, 50%, 100% { opacity: 1; }
-    25%, 75% { opacity: 0.3; }
+  #buzzerIcon {
+    font-size: 70px;
+    margin: 20px;
+    transition: transform 0.3s ease, color 0.3s ease;
+    color: #777;
+  }
+  #buzzerIcon.active {
+    color: #ff4040;
+    transform: scale(1.2);
   }
 </style>
 
 <script>
-let sensor1Max = 0;
-let sensor2Max = 0;
+const ctx = document.getElementById("sensorChart").getContext("2d");
 
-async function updateData() {
-  try {
-    const response = await fetch("http://<raspi-ip>:5000/data"); // Pi's Flask endpoint
-    const data = await response.json();
-
-    // Update distances
-    document.getElementById("sensor1").innerText = data.sensor1.toFixed(1);
-    document.getElementById("sensor2").innerText = data.sensor2.toFixed(1);
-
-    // Update max values
-    if (data.sensor1 > sensor1Max) sensor1Max = data.sensor1;
-    if (data.sensor2 > sensor2Max) sensor2Max = data.sensor2;
-    document.getElementById("sensor1_max").innerText = sensor1Max.toFixed(1);
-    document.getElementById("sensor2_max").innerText = sensor2Max.toFixed(1);
-
-    // Update buzzer status
-    const buzzerElem = document.getElementById("buzzer");
-    if (data.buzzer) {
-      buzzerElem.classList.remove("buzzer-off");
-      buzzerElem.classList.add("buzzer-on");
-    } else {
-      buzzerElem.classList.remove("buzzer-on");
-      buzzerElem.classList.add("buzzer-off");
-    }
-
-    // Update charts
-    addData(sensor1Chart, data.sensor1);
-    addData(sensor2Chart, data.sensor2);
-
-  } catch (err) {
-    console.error("Error fetching sensor data:", err);
-  }
-}
-
-// Chart.js helpers
-function addData(chart, value) {
-  const now = new Date().toLocaleTimeString();
-  chart.data.labels.push(now);
-  chart.data.datasets[0].data.push(value);
-
-  if (chart.data.labels.length > 20) { // keep last 20 points
-    chart.data.labels.shift();
-    chart.data.datasets[0].data.shift();
-  }
-  chart.update();
-}
-
-// Setup charts
-const sensor1Chart = new Chart(document.getElementById('sensor1Chart'), {
-  type: 'line',
+const sensorChart = new Chart(ctx, {
+  type: "scatter",
   data: {
-    labels: [],
-    datasets: [{
-      label: 'Sensor 1 Distance (cm)',
-      data: [],
-      borderColor: 'blue',
-      fill: false
-    }]
+    datasets: [
+      {
+        label: "Sensor 1",
+        borderColor: "#4da6ff",
+        backgroundColor: "#4da6ff",
+        data: [],
+        showLine: false,
+        pointRadius: 6,
+        pointHoverRadius: 8
+      },
+      {
+        label: "Sensor 2",
+        borderColor: "#4dff88",
+        backgroundColor: "#4dff88",
+        data: [],
+        showLine: false,
+        pointRadius: 6,
+        pointHoverRadius: 8
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { labels: { color: "#333" } }
+    },
+    scales: {
+      x: {
+        type: "category",
+        ticks: { color: "#555" },
+        grid: { display: false }
+      },
+      y: {
+        beginAtZero: true,
+        max: 50,   // keep within 0–50 cm
+        ticks: { 
+          color: "#555",
+          callback: function(value) { return value + " cm"; }
+        },
+        grid: { color: "rgba(0,0,0,0.05)" }
+      }
+    },
+    animation: false
   }
 });
 
-const sensor2Chart = new Chart(document.getElementById('sensor2Chart'), {
-  type: 'line',
-  data: {
-    labels: [],
-    datasets: [{
-      label: 'Sensor 2 Distance (cm)',
-      data: [],
-      borderColor: 'green',
-      fill: false
-    }]
-  }
-});
+function updateData() {
+  fetch("/data") // <-- Flask endpoint from your Pi
+    .then(response => response.json())
+    .then(data => {
+      const now = new Date().toLocaleTimeString();
 
-setInterval(updateData, 2000); // refresh every 2 sec
+      // Add new data points
+      sensorChart.data.datasets[0].data.push({x: now, y: data.sensor1});
+      sensorChart.data.datasets[1].data.push({x: now, y: data.sensor2});
+
+      // Keep only last 20 points
+      if (sensorChart.data.datasets[0].data.length > 20) {
+        sensorChart.data.datasets[0].data.shift();
+        sensorChart.data.datasets[1].data.shift();
+      }
+
+      sensorChart.update();
+
+      // Update buzzer icon
+      const buzzerIcon = document.getElementById("buzzerIcon");
+      if (data.buzzer) {
+        buzzerIcon.textContent = "🔔"; 
+        buzzerIcon.classList.add("active");
+      } else {
+        buzzerIcon.textContent = "🔕"; 
+        buzzerIcon.classList.remove("active");
+      }
+    });
+}
+
+setInterval(updateData, 1000);
 </script>
-
-
 {% endblock %}

@@ -1,22 +1,81 @@
 {% extends "base.html" %}
 {% block content %}
 <h2>Humidity & Temperature</h2>
+
 <div class="card p-3 shadow">
   <h4>Temperature: <span id="temp">--</span> °C</h4>
   <h4>Humidity: <span id="hum">--</span> %</h4>
+  <canvas id="tempHumChart" width="800" height="300"></canvas>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+let timeCounter = 0;
+let tempData = [];
+let humData = [];
+
+const ctx = document.getElementById('tempHumChart').getContext('2d');
+const tempHumChart = new Chart(ctx, {
+  type: 'line',
+  data: {
+    datasets: [
+      {
+        label: 'Temperature (°C)',
+        data: tempData,
+        borderColor: 'red',
+        backgroundColor: 'rgba(255, 99, 132, 0.3)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      },
+      {
+        label: 'Humidity (%)',
+        data: humData,
+        borderColor: 'blue',
+        backgroundColor: 'rgba(54, 162, 235, 0.3)',
+        fill: true,
+        tension: 0.3,
+        pointRadius: 5,
+        pointHoverRadius: 7
+      }
+    ]
+  },
+  options: {
+    responsive: false,
+    maintainAspectRatio: false,
+    animation: false,
+    scales: {
+      x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Values' } }
+    }
+  }
+});
+
 function fetchData() {
   fetch("/get_temp_humidity")
     .then(res => res.json())
     .then(data => {
+      timeCounter++;
+
+      // Update displayed values
       document.getElementById("temp").textContent = data.temperature;
       document.getElementById("hum").textContent = data.humidity;
+
+      // Push to datasets
+      tempData.push({ x: timeCounter, y: data.temperature });
+      humData.push({ x: timeCounter, y: data.humidity });
+
+      // Keep last 60 points
+      if (tempData.length > 60) tempData.shift();
+      if (humData.length > 60) humData.shift();
+
+      tempHumChart.update();
     });
 }
+
 setInterval(fetchData, 2000);
 </script>
 {% endblock %}

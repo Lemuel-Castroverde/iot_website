@@ -1,5 +1,7 @@
 from flask import Flask, render_template, jsonify, request
 import random
+import RPi.GPIO as GPIO
+import time
 
 app = Flask(__name__)
 
@@ -66,13 +68,21 @@ def get_temp_humidity():
     }
     return jsonify(data)
 
-@app.route("/get_distance")
-def get_distance():
-    # --- Random test values (active) ---
-    return {
-        "sensor1": random.randint(10, 200),
-        "sensor2": random.randint(10, 200)
-    }
+app.route("/data")
+def data():
+    d1 = get_distance(TRIG1, ECHO1)
+    d2 = get_distance(TRIG2, ECHO2)
+
+    print(f"Sensor1: {d1:.1f} cm | Sensor2: {d2:.1f} cm")
+    display_data(d1, d2)
+
+    # Buzzer logic
+    if (d1 != -1 and d1 >= 12) or (d2 != -1 and d2 >= 12):
+        control_buzzer(True)
+    else:
+        control_buzzer(False)
+
+    return jsonify({"sensor1": d1, "sensor2": d2, "buzzer": buzzer_state})
 
 # --- Real sensor code (commented for now) ---
     # dist1 = read_distance(TRIG1, ECHO1)

@@ -3,13 +3,11 @@
 <h2>Distance Sensors</h2>
 
 <div class="card p-3 shadow">
-  <h4>Sensor 1 Distance: <span id="sensor1">--</span> cm (Max: <span id="sensor1_max">0</span> cm)</h4>
-  <canvas id="sensor1Chart" width="800" height="300"></canvas>
-</div>
-
-<div class="card p-3 shadow mt-3">
-  <h4>Sensor 2 Distance: <span id="sensor2">--</span> cm (Max: <span id="sensor2_max">0</span> cm)</h4>
-  <canvas id="sensor2Chart" width="800" height="300"></canvas>
+  <h4>
+    Sensor 1 Distance: <span id="sensor1">--</span> cm (Max: <span id="sensor1_max">0</span> cm) |
+    Sensor 2 Distance: <span id="sensor2">--</span> cm (Max: <span id="sensor2_max">0</span> cm)
+  </h4>
+  <canvas id="distanceChart" width="800" height="300"></canvas>
 </div>
 
 <!-- 🔔 Buzzer Indicator -->
@@ -38,23 +36,21 @@ let timeCounter = 0;
 let sensor1Data = [];
 let sensor2Data = [];
 
-const ctx1 = document.getElementById('sensor1Chart').getContext('2d');
-const sensor1Chart = new Chart(ctx1, {
+const ctx = document.getElementById('distanceChart').getContext('2d');
+const distanceChart = new Chart(ctx, {
   type: 'scatter',
-  data: { datasets: [{ label: 'Sensor 1', data: sensor1Data, backgroundColor: 'blue', pointRadius: 5, pointHoverRadius: 7 }] },
+  data: { 
+    datasets: [
+      { label: 'Sensor 1', data: sensor1Data, backgroundColor: 'blue', pointRadius: 5, pointHoverRadius: 7 },
+      { label: 'Sensor 2', data: sensor2Data, backgroundColor: 'green', pointRadius: 5, pointHoverRadius: 7 }
+    ] 
+  },
   options: {
     animation: false, responsive: false, maintainAspectRatio: false,
-    scales: { x: { type: 'linear', title: { display: true, text: 'Time (s)' } }, y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } } }
-  }
-});
-
-const ctx2 = document.getElementById('sensor2Chart').getContext('2d');
-const sensor2Chart = new Chart(ctx2, {
-  type: 'scatter',
-  data: { datasets: [{ label: 'Sensor 2', data: sensor2Data, backgroundColor: 'green', pointRadius: 5, pointHoverRadius: 7 }] },
-  options: {
-    animation: false, responsive: false, maintainAspectRatio: false,
-    scales: { x: { type: 'linear', title: { display: true, text: 'Time (s)' } }, y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } } }
+    scales: { 
+      x: { type: 'linear', title: { display: true, text: 'Time (s)' } }, 
+      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } } 
+    }
   }
 });
 
@@ -95,8 +91,7 @@ function fetchData() {
       if (sensor1Data.length > 60) sensor1Data.shift();
       if (sensor2Data.length > 60) sensor2Data.shift();
 
-      sensor1Chart.update();
-      sensor2Chart.update();
+      distanceChart.update();
 
       // Update buzzer
       updateBuzzer(data.sensor1, data.sensor2);

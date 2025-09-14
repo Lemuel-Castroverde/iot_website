@@ -31,21 +31,85 @@
 </style>
 
 <script>
+let sensor1Max = 0;
+let sensor2Max = 0;
+
 async function updateData() {
   try {
     const response = await fetch("http://<raspi-ip>:5000/data"); // Pi's Flask endpoint
     const data = await response.json();
 
-    document.getElementById("s1").innerText = data.sensor1 + " cm";
-    document.getElementById("s2").innerText = data.sensor2 + " cm";
-    document.getElementById("status").innerText = data.buzzer ? "Buzzer ON" : "Buzzer OFF";
+    // Update distances
+    document.getElementById("sensor1").innerText = data.sensor1.toFixed(1);
+    document.getElementById("sensor2").innerText = data.sensor2.toFixed(1);
+
+    // Update max values
+    if (data.sensor1 > sensor1Max) sensor1Max = data.sensor1;
+    if (data.sensor2 > sensor2Max) sensor2Max = data.sensor2;
+    document.getElementById("sensor1_max").innerText = sensor1Max.toFixed(1);
+    document.getElementById("sensor2_max").innerText = sensor2Max.toFixed(1);
+
+    // Update buzzer status
+    const buzzerElem = document.getElementById("buzzer");
+    if (data.buzzer) {
+      buzzerElem.classList.remove("buzzer-off");
+      buzzerElem.classList.add("buzzer-on");
+    } else {
+      buzzerElem.classList.remove("buzzer-on");
+      buzzerElem.classList.add("buzzer-off");
+    }
+
+    // Update charts
+    addData(sensor1Chart, data.sensor1);
+    addData(sensor2Chart, data.sensor2);
 
   } catch (err) {
     console.error("Error fetching sensor data:", err);
   }
 }
 
+// Chart.js helpers
+function addData(chart, value) {
+  const now = new Date().toLocaleTimeString();
+  chart.data.labels.push(now);
+  chart.data.datasets[0].data.push(value);
+
+  if (chart.data.labels.length > 20) { // keep last 20 points
+    chart.data.labels.shift();
+    chart.data.datasets[0].data.shift();
+  }
+  chart.update();
+}
+
+// Setup charts
+const sensor1Chart = new Chart(document.getElementById('sensor1Chart'), {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Sensor 1 Distance (cm)',
+      data: [],
+      borderColor: 'blue',
+      fill: false
+    }]
+  }
+});
+
+const sensor2Chart = new Chart(document.getElementById('sensor2Chart'), {
+  type: 'line',
+  data: {
+    labels: [],
+    datasets: [{
+      label: 'Sensor 2 Distance (cm)',
+      data: [],
+      borderColor: 'green',
+      fill: false
+    }]
+  }
+});
+
 setInterval(updateData, 2000); // refresh every 2 sec
 </script>
+
 
 {% endblock %}

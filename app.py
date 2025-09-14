@@ -1,7 +1,5 @@
 from flask import Flask, render_template, jsonify, request
 import random
-import RPi.GPIO as GPIO
-import time
 
 app = Flask(__name__)
 
@@ -68,36 +66,20 @@ def get_temp_humidity():
     }
     return jsonify(data)
 
-@app.route("/data")
-def data():
-    d1 = get_distance(TRIG1, ECHO1)
-    d2 = get_distance(TRIG2, ECHO2)
-
-    print(f"Sensor1: {d1:.1f} cm | Sensor2: {d2:.1f} cm")
-    display_data(d1, d2)
-
-    # Buzzer logic
-    if (d1 != -1 and d1 >= 12) or (d2 != -1 and d2 >= 12):
-        control_buzzer(True)
-    else:
-        control_buzzer(False)
-
-    return jsonify({"sensor1": d1, "sensor2": d2, "buzzer": buzzer_state})
-
-# --- NEW: Pi posts sensor data here ---
-@app.route("/update", methods=["POST"])
-def update_distance():
-    global latest_distance
-    data = request.get_json()
-    if data:
-        latest_distance = data
-        return jsonify({"status": "ok"})
-    return jsonify({"status": "error"}), 400
-
-# --- Modified: frontend fetches latest real data ---
 @app.route("/get_distance")
 def get_distance():
-    return jsonify(latest_distance)
+    # --- Random test values (active) ---
+    return {
+        "sensor1": random.randint(10, 200),
+        "sensor2": random.randint(10, 200)
+    }
+
+# --- Real sensor code (commented for now) ---
+    # dist1 = read_distance(TRIG1, ECHO1)
+    # dist2 = read_distance(TRIG2, ECHO2)
+    # return {"sensor1": dist1, "sensor2": dist2}
+
+    
 
 @app.route('/get_gas_vibration')
 def get_gas_vibration():

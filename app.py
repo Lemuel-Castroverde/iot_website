@@ -62,8 +62,8 @@ def face_recognition():
 history_temp_hum = []
 @app.route('/get_temp_humidity')
 def get_temp_humidity():
-    temperature = round(random.uniform(20, 30), 2)
-    humidity = round(random.uniform(40, 60), 2)
+    temperature = round(random.uniform(20, 30))
+    humidity = round(random.uniform(40, 60))
     timestamp = int(time.time())
 
     history_temp_hum.append({"time": timestamp, "temperature": temperature, "humidity": humidity})
@@ -80,7 +80,8 @@ def get_temp_humidity_history():
 # Act02 - Distance
 @app.route("/get_distance")
 def get_distance():
-    return {"sensor1": random.randint(10, 200), "sensor2": random.randint(10, 200)}
+    return {"sensor1": random.randint(10, 200), 
+            "sensor2": random.randint(10, 200)}
 
 
 # Act03 - Motion Sensor (returns motion detected or not)

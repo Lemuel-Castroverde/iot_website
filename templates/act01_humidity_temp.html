@@ -14,7 +14,6 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-let timeCounter = 0;
 let tempData = [];
 let humData = [];
 
@@ -30,8 +29,8 @@ const tempHumChart = new Chart(ctx, {
         backgroundColor: 'rgba(255, 99, 132, 0.3)',
         fill: true,
         tension: 0.3,
-        pointRadius: 5,
-        pointHoverRadius: 7
+        pointRadius: 3,
+        pointHoverRadius: 5
       },
       {
         label: 'Humidity (%)',
@@ -40,8 +39,8 @@ const tempHumChart = new Chart(ctx, {
         backgroundColor: 'rgba(54, 162, 235, 0.3)',
         fill: true,
         tension: 0.3,
-        pointRadius: 5,
-        pointHoverRadius: 7
+        pointRadius: 3,
+        pointHoverRadius: 5
       }
     ]
   },
@@ -50,8 +49,16 @@ const tempHumChart = new Chart(ctx, {
     maintainAspectRatio: false,
     animation: false,
     scales: {
-      x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
-      y: { beginAtZero: true, title: { display: true, text: 'Values' } }
+      x: {
+        type: 'linear',
+        min: 0,
+        max: 60,
+        title: { display: true, text: 'Time (s)' }
+      },
+      y: {
+        beginAtZero: true,
+        title: { display: true, text: 'Values' }
+      }
     }
   }
 });
@@ -60,16 +67,21 @@ function fetchData() {
   fetch("/get_temp_humidity")
     .then(res => res.json())
     .then(data => {
-      timeCounter++;
+      // shift all existing points left by 1s
+      tempData.forEach(p => p.x--);
+      humData.forEach(p => p.x--);
 
+      // remove points that fall off the left (< 0)
+      while (tempData.length && tempData[0].x < 0) tempData.shift();
+      while (humData.length && humData[0].x < 0) humData.shift();
+
+      // add new point at right edge (x = 60)
+      tempData.push({ x: 60, y: data.temperature });
+      humData.push({ x: 60, y: data.humidity });
+
+      // update labels
       document.getElementById("temp").textContent = data.temperature;
       document.getElementById("hum").textContent = data.humidity;
-
-      tempData.push({ x: timeCounter, y: data.temperature });
-      humData.push({ x: timeCounter, y: data.humidity });
-
-      if (tempData.length > 60) tempData.shift();
-      if (humData.length > 60) humData.shift();
 
       tempHumChart.update();
     });

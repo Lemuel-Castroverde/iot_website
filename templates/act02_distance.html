@@ -7,7 +7,9 @@
     Sensor 1 Distance: <span id="sensor1">--</span> cm (Max: <span id="sensor1_max">0</span> cm) |
     Sensor 2 Distance: <span id="sensor2">--</span> cm (Max: <span id="sensor2_max">0</span> cm)
   </h4>
-  <canvas id="distanceChart" width="800" height="300"></canvas>
+  <div style="height:400px;">
+    <canvas id="distanceChart"></canvas>
+  </div>
 </div>
 
 <!-- 🔔 Buzzer Indicator -->
@@ -46,7 +48,9 @@ const distanceChart = new Chart(ctx, {
     ] 
   },
   options: {
-    animation: false, responsive: false, maintainAspectRatio: false,
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
     scales: { 
       x: { type: 'linear', title: { display: true, text: 'Time (s)' } }, 
       y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } } 

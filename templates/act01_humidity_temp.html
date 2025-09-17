@@ -2,10 +2,12 @@
 {% block content %}
 <h2>Humidity & Temperature</h2>
 
-<div class="card p-3 shadow" style="height: 400px;">
+<div class="card p-3 shadow">
   <h4>Temperature: <span id="temp">--</span> °C</h4>
   <h4>Humidity: <span id="hum">--</span> %</h4>
-  <canvas id="tempHumChart" class="w-100 h-100"></canvas>
+  <div style="height:400px;">
+    <canvas id="tempHumChart"></canvas>
+  </div>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
@@ -16,8 +18,8 @@ let timeCounter = 0;
 let tempData = [];
 let humData = [];
 
-const ctx1 = document.getElementById('tempHumChart').getContext('2d');
-const tempHumChart = new Chart(ctx1, {
+const ctx = document.getElementById('tempHumChart').getContext('2d');
+const tempHumChart = new Chart(ctx, {
   type: 'line',
   data: {
     datasets: [
@@ -48,16 +50,8 @@ const tempHumChart = new Chart(ctx1, {
     maintainAspectRatio: false,
     animation: false,
     scales: {
-      x: { 
-        type: 'linear', 
-        title: { display: true, text: 'Time (s)' },
-        min: 0,
-        max: 60
-      },
-      y: { 
-        beginAtZero: true, 
-        title: { display: true, text: 'Values' } 
-      }
+      x: { type: 'linear', title: { display: true, text: 'Time (s)' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Values' } }
     }
   }
 });
@@ -68,16 +62,14 @@ function fetchData() {
     .then(data => {
       timeCounter++;
 
-      // Update displayed values
       document.getElementById("temp").textContent = data.temperature;
       document.getElementById("hum").textContent = data.humidity;
 
-      // Push to datasets
       tempData.push({ x: timeCounter, y: data.temperature });
       humData.push({ x: timeCounter, y: data.humidity });
 
-      // Dynamically extend X-axis
-      tempHumChart.options.scales.x.max = timeCounter;
+      if (tempData.length > 60) tempData.shift();
+      if (humData.length > 60) humData.shift();
 
       tempHumChart.update();
     });

@@ -72,16 +72,11 @@ function fetchData() {
       document.getElementById("temp").textContent = data.temperature;
       document.getElementById("hum").textContent = data.humidity;
 
-      // Push new points
+      // Push to datasets
       tempData.push({ x: timeCounter, y: data.temperature });
       humData.push({ x: timeCounter, y: data.humidity });
 
-      // Trim old data (older than 60s)
-      tempData = tempData.filter(p => p.x >= timeCounter - 60);
-      humData = humData.filter(p => p.x >= timeCounter - 60);
-
-      // Adjust X-axis range
-      tempHumChart.options.scales.x.min = Math.max(0, timeCounter - 60);
+      // Dynamically extend X-axis
       tempHumChart.options.scales.x.max = timeCounter;
 
       tempHumChart.update();

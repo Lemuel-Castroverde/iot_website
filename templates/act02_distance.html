@@ -52,12 +52,7 @@ const distanceChart = new Chart(ctx, {
     maintainAspectRatio: false,
     animation: false,
     scales: { 
-      x: { 
-        type: 'linear', 
-        title: { display: true, text: 'Time (s)' },
-        min: 0,
-        max: 60
-      }, 
+      x: { type: 'linear', title: { display: true, text: 'Time (s)' } }, 
       y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } } 
     }
   }
@@ -97,13 +92,8 @@ function fetchData() {
       sensor1Data.push({ x: timeCounter, y: data.sensor1 });
       sensor2Data.push({ x: timeCounter, y: data.sensor2 });
 
-      // Trim old data (older than 60s)
-      sensor1Data = sensor1Data.filter(p => p.x >= timeCounter - 60);
-      sensor2Data = sensor2Data.filter(p => p.x >= timeCounter - 60);
-
-      // Adjust x-axis range
-      distanceChart.options.scales.x.min = Math.max(0, timeCounter - 60);
-      distanceChart.options.scales.x.max = timeCounter;
+      if (sensor1Data.length > 60) sensor1Data.shift();
+      if (sensor2Data.length > 60) sensor2Data.shift();
 
       distanceChart.update();
 

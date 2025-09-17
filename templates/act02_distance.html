@@ -7,7 +7,9 @@
     Sensor 1 Distance: <span id="sensor1">--</span> cm (Max: <span id="sensor1_max">0</span> cm) |
     Sensor 2 Distance: <span id="sensor2">--</span> cm (Max: <span id="sensor2_max">0</span> cm)
   </h4>
-  <canvas id="distanceChart" width="800" height="300"></canvas>
+  <div style="height:400px;">
+    <canvas id="distanceChart"></canvas>
+  </div>
 </div>
 
 <!-- 🔔 Buzzer Indicator -->
@@ -31,7 +33,6 @@
 <script>
 let sensor1Max = 0;
 let sensor2Max = 0;
-let timeCounter = 0;
 
 let sensor1Data = [];
 let sensor2Data = [];
@@ -41,15 +42,23 @@ const distanceChart = new Chart(ctx, {
   type: 'scatter',
   data: { 
     datasets: [
-      { label: 'Sensor 1', data: sensor1Data, backgroundColor: 'blue', pointRadius: 5, pointHoverRadius: 7 },
-      { label: 'Sensor 2', data: sensor2Data, backgroundColor: 'green', pointRadius: 5, pointHoverRadius: 7 }
+      { label: 'Sensor 1', data: sensor1Data, backgroundColor: 'blue', pointRadius: 4, pointHoverRadius: 6 },
+      { label: 'Sensor 2', data: sensor2Data, backgroundColor: 'green', pointRadius: 4, pointHoverRadius: 6 }
     ] 
   },
   options: {
-    animation: false, responsive: false, maintainAspectRatio: false,
+    animation: false, responsive: true, maintainAspectRatio: false,
     scales: { 
-      x: { type: 'linear', title: { display: true, text: 'Time (s)' } }, 
-      y: { beginAtZero: true, title: { display: true, text: 'Distance (cm)' } } 
+      x: { 
+        type: 'linear', 
+        min: 0, 
+        max: 60, 
+        title: { display: true, text: 'Time (s)' } 
+      }, 
+      y: { 
+        beginAtZero: true, 
+        title: { display: true, text: 'Distance (cm)' } 
+      } 
     }
   }
 });
@@ -72,7 +81,17 @@ function fetchData() {
   fetch("/get_distance")
     .then(res => res.json())
     .then(data => {
-      timeCounter++;
+      // Shift old points left by 1s
+      sensor1Data.forEach(p => p.x--);
+      sensor2Data.forEach(p => p.x--);
+
+      // Remove points that move off screen
+      while (sensor1Data.length && sensor1Data[0].x < 0) sensor1Data.shift();
+      while (sensor2Data.length && sensor2Data[0].x < 0) sensor2Data.shift();
+
+      // Add new points at x=60
+      sensor1Data.push({ x: 60, y: data.sensor1 });
+      sensor2Data.push({ x: 60, y: data.sensor2 });
 
       // Update displayed values
       document.getElementById("sensor1").textContent = data.sensor1;
@@ -83,13 +102,6 @@ function fetchData() {
       if (data.sensor2 > sensor2Max) sensor2Max = data.sensor2;
       document.getElementById("sensor1_max").textContent = sensor1Max;
       document.getElementById("sensor2_max").textContent = sensor2Max;
-
-      // Push new data
-      sensor1Data.push({ x: timeCounter, y: data.sensor1 });
-      sensor2Data.push({ x: timeCounter, y: data.sensor2 });
-
-      if (sensor1Data.length > 60) sensor1Data.shift();
-      if (sensor2Data.length > 60) sensor2Data.shift();
 
       distanceChart.update();
 

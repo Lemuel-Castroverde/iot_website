@@ -5,7 +5,9 @@
 <div class="card p-3 shadow">
   <h4>Temperature: <span id="temp">--</span> °C</h4>
   <h4>Humidity: <span id="hum">--</span> %</h4>
-  <canvas id="tempHumChart" width="800" height="300"></canvas>
+  <div style="height:400px;">
+    <canvas id="tempHumChart"></canvas>
+  </div>
 </div>
 
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
@@ -44,7 +46,7 @@ const tempHumChart = new Chart(ctx, {
     ]
   },
   options: {
-    responsive: false,
+    responsive: true,
     maintainAspectRatio: false,
     animation: false,
     scales: {
@@ -60,15 +62,12 @@ function fetchData() {
     .then(data => {
       timeCounter++;
 
-      // Update displayed values
       document.getElementById("temp").textContent = data.temperature;
       document.getElementById("hum").textContent = data.humidity;
 
-      // Push to datasets
       tempData.push({ x: timeCounter, y: data.temperature });
       humData.push({ x: timeCounter, y: data.humidity });
 
-      // Keep last 60 points
       if (tempData.length > 60) tempData.shift();
       if (humData.length > 60) humData.shift();
 

@@ -10,10 +10,27 @@
   </div>
 </div>
 
+<hr>
+
+<!-- History Section -->
+<div class="card p-3 shadow mt-3">
+  <h4>📜 History</h4>
+  <button class="btn btn-primary mb-2" onclick="loadMinutes()">Load Available Minutes</button>
+  <select id="minuteSelect" class="form-select mb-3" onchange="loadHistory()">
+    <option value="">-- Select Minute --</option>
+  </select>
+  <div style="height:400px;">
+    <canvas id="historyChart"></canvas>
+  </div>
+</div>
+
 <a href="/" class="btn btn-secondary mt-3">⬅ Back to Dashboard</a>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+/* ------------------------
+   Live Chart
+------------------------- */
 let tempData = [];
 let humData = [];
 
@@ -49,16 +66,8 @@ const tempHumChart = new Chart(ctx, {
     maintainAspectRatio: false,
     animation: false,
     scales: {
-      x: {
-        type: 'linear',
-        min: 0,
-        max: 60,
-        title: { display: true, text: 'Time (s)' }
-      },
-      y: {
-        beginAtZero: true,
-        title: { display: true, text: 'Values' }
-      }
+      x: { type: 'linear', min: 0, max: 60, title: { display: true, text: 'Time (s)' } },
+      y: { beginAtZero: true, title: { display: true, text: 'Values' } }
     }
   }
 });
@@ -67,26 +76,70 @@ function fetchData() {
   fetch("/get_temp_humidity")
     .then(res => res.json())
     .then(data => {
-      // shift all existing points left by 1s
       tempData.forEach(p => p.x--);
       humData.forEach(p => p.x--);
 
-      // remove points that fall off the left (< 0)
       while (tempData.length && tempData[0].x < 0) tempData.shift();
       while (humData.length && humData[0].x < 0) humData.shift();
 
-      // add new point at right edge (x = 60)
       tempData.push({ x: 60, y: data.temperature });
       humData.push({ x: 60, y: data.humidity });
 
-      // update labels
       document.getElementById("temp").textContent = data.temperature;
       document.getElementById("hum").textContent = data.humidity;
 
       tempHumChart.update();
     });
 }
-
 setInterval(fetchData, 1000);
+
+/* ------------------------
+   History Chart
+------------------------- */
+const histCtx = document.getElementById("historyChart").getContext("2d");
+const historyChart = new Chart(histCtx, {
+  type: "line",
+  data: {
+    labels: [],
+    datasets: [
+      { label: "Temperature (°C)", data: [], borderColor: "orange", fill: false, tension: 0.3 },
+      { label: "Humidity (%)", data: [], borderColor: "green", fill: false, tension: 0.3 }
+    ]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: { x: { title: { display: true, text: "Time" } } }
+  }
+});
+
+function loadMinutes() {
+  fetch("/get_temp_humidity_minutes")
+    .then(r => r.json())
+    .then(minutes => {
+      const select = document.getElementById("minuteSelect");
+      select.innerHTML = '<option value="">-- Select Minute --</option>';
+      minutes.forEach(m => {
+        const opt = document.createElement("option");
+        opt.value = m;
+        opt.textContent = m;
+        select.appendChild(opt);
+      });
+    });
+}
+
+function loadHistory() {
+  const minute = document.getElementById("minuteSelect").value;
+  if (!minute) return;
+
+  fetch(`/get_temp_humidity_history?minute=${encodeURIComponent(minute)}`)
+    .then(r => r.json())
+    .then(rows => {
+      historyChart.data.labels = rows.map(r => new Date(r.time * 1000).toLocaleTimeString());
+      historyChart.data.datasets[0].data = rows.map(r => r.temperature);
+      historyChart.data.datasets[1].data = rows.map(r => r.humidity);
+      historyChart.update();
+    });
+}
 </script>
 {% endblock %}

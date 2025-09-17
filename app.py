@@ -1,5 +1,5 @@
-from flask import Flask, render_template, jsonify, request
-import random
+from flask import Flask, render_template, jsonify
+import random, time
 
 app = Flask(__name__)
 
@@ -55,46 +55,84 @@ def face_recognition():
 
 
 # ----------------------
-# Example API Endpoints (dummy data for testing)
-# Replace with real sensor logic later
+# Dummy API Endpoints
 # ----------------------
+
+# Act01 - Humidity & Temp (with history)
+history_temp_hum = []
 @app.route('/get_temp_humidity')
 def get_temp_humidity():
-    data = {
-        "temperature": round(random.uniform(20, 30), 2),
-        "humidity": round(random.uniform(40, 60), 2)
-    }
-    return jsonify(data)
+    temperature = round(random.uniform(20, 30), 2)
+    humidity = round(random.uniform(40, 60), 2)
+    timestamp = int(time.time())
 
+    history_temp_hum.append({"time": timestamp, "temperature": temperature, "humidity": humidity})
+    if len(history_temp_hum) > 50:
+        history_temp_hum.pop(0)
+
+    return jsonify({"temperature": temperature, "humidity": humidity})
+
+@app.route('/get_temp_humidity_history')
+def get_temp_humidity_history():
+    return jsonify(history_temp_hum)
+
+
+# Act02 - Distance
 @app.route("/get_distance")
 def get_distance():
-    # --- Random test values (active) ---
-    return {
-        "sensor1": random.randint(10, 200),
-        "sensor2": random.randint(10, 200)
-    }
+    return {"sensor1": random.randint(10, 200), "sensor2": random.randint(10, 200)}
 
-# --- Real sensor code (commented for now) ---
-    # dist1 = read_distance(TRIG1, ECHO1)
-    # dist2 = read_distance(TRIG2, ECHO2)
-    # return {"sensor1": dist1, "sensor2": dist2}
 
-    
+# Act03 - Motion Sensor (returns motion detected or not)
+@app.route("/get_motion")
+def get_motion():
+    return {"motion": random.choice([True, False])}
 
+
+# Act04 - Gas & Vibration
 @app.route('/get_gas_vibration')
 def get_gas_vibration():
-    data = {"gas": random.choice(["Safe", "Leak"]), "vibration": random.randint(0, 1)}
-    return jsonify(data)
+    return {"gas": random.choice(["Safe", "Leak"]), "vibration": random.randint(0, 1)}
 
+
+# Act05 - Sound & Rain
 @app.route('/get_sound_rain')
 def get_sound_rain():
-    data = {"sound": random.randint(30, 90), "rain": random.choice(["Dry", "Wet"])}
-    return jsonify(data)
+    return {"sound": random.randint(30, 90), "rain": random.choice(["Dry", "Wet"])}
 
+
+# Act06 - GPS
 @app.route('/get_gps')
 def get_gps():
-    data = {"lat": 14.5995, "lng": 120.9842}  # Example: Manila
-    return jsonify(data)
+    # Dummy Manila area (lat/lng changes slightly)
+    return {"lat": round(14.5995 + random.uniform(-0.01, 0.01), 5),
+            "lng": round(120.9842 + random.uniform(-0.01, 0.01), 5)}
 
+
+# Act07 - Voice Controlled LED
+@app.route('/get_voice_led')
+def get_voice_led():
+    return {"command": random.choice(["ON", "OFF"]), "status": random.choice(["LED ON", "LED OFF"])}
+
+
+# Act08 - Text-to-Speech
+@app.route('/get_tts')
+def get_tts():
+    return {"text": "Hello World", "status": "Played"}
+
+
+# Act09 - Object Detection
+@app.route('/get_object_detection')
+def get_object_detection():
+    return {"objects": random.choice([["Person"], ["Car"], ["Dog"], ["Cat"], ["None"]])}
+
+
+# Act10 - Face Recognition
+@app.route('/get_face_recognition')
+def get_face_recognition():
+    return {"faces": random.randint(0, 3), "status": random.choice(["Recognized", "Unknown"])}
+
+
+# ----------------------
 if __name__ == "__main__":
     app.run(debug=True)
